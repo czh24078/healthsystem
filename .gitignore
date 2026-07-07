@@ -1,0 +1,16 @@
+# Maven 编译产物
+target/
+
+# IntelliJ IDEA
+.idea/
+*.iml
+
+# 数据库配置（含密码，不提交）
+Common/src/main/resources/db.properties
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+
+# 日志
+*.log

@@ -1,0 +1,4 @@
+# 数据库连接配置（复制此文件为 db.properties 并填入真实信息）
+db.url=jdbc:mysql://localhost:3306/healthsys?useSSL=false&serverTimezone=UTC
+db.user=root
+db.password=your_password_here
