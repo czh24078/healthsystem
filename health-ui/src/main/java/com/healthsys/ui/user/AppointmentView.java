@@ -1,3 +1,4 @@
+
 package com.healthsys.ui.user;
 
 import com.healthsys.service.AppointmentService;
@@ -373,7 +374,7 @@ public class AppointmentView {
         }
 
         public Component getTableCellRendererComponent(JTable table, Object value,
-                boolean isSelected, boolean hasFocus, int row, int column) {
+                                                       boolean isSelected, boolean hasFocus, int row, int column) {
             setText((value == null) ? "" : value.toString());
             return this;
         }
@@ -388,7 +389,7 @@ public class AppointmentView {
         }
 
         public Component getTableCellEditorComponent(JTable table, Object value,
-                boolean isSelected, int row, int column) {
+                                                     boolean isSelected, int row, int column) {
             label = (value == null) ? "" : value.toString();
             JButton button = new JButton(label);
             button.addActionListener(e -> {
@@ -420,7 +421,7 @@ public class AppointmentView {
         }
 
         public Component getTableCellEditorComponent(JTable table, Object value,
-                boolean isSelected, int row, int column) {
+                                                     boolean isSelected, int row, int column) {
             label = (value == null) ? "" : value.toString();
             JButton button = new JButton(label);
             button.addActionListener(e -> {
@@ -447,7 +448,7 @@ public class AppointmentView {
         }
 
         public Component getTableCellEditorComponent(JTable table, Object value,
-                boolean isSelected, int row, int column) {
+                                                     boolean isSelected, int row, int column) {
             label = (value == null) ? "" : value.toString();
             JButton button = new JButton(label);
             button.addActionListener(e -> {
@@ -688,7 +689,7 @@ class DetailButtonEditor extends DefaultCellEditor {
     private JPanel appointmentPanel;
 
     public DetailButtonEditor(JCheckBox checkBox, JDialog parentDialog, AppointmentService controller,
-            JPanel appointmentPanel) {
+                              JPanel appointmentPanel) {
         super(checkBox);
         this.parentDialog = parentDialog;
         this.controller = controller;
@@ -696,7 +697,7 @@ class DetailButtonEditor extends DefaultCellEditor {
     }
 
     public Component getTableCellEditorComponent(JTable table, Object value,
-            boolean isSelected, int row, int column) {
+                                                 boolean isSelected, int row, int column) {
         label = (value == null) ? "" : value.toString();
         JButton button = new JButton(label);
         button.addActionListener(e -> {
