@@ -10,9 +10,6 @@ public class MainView extends JPanel {
     private final Long doctorId;
     private final String doctorName;
     private JPanel contentPanel;
-    private CheckItemPanel checkItemPanel;
-    private CheckGroupPanel checkGroupPanel;
-    private UserPanel userPanel;
     private AppointmentPanel appointmentPanel;
     private ReportPanel reportPanel;
     private AboutView aboutView;
@@ -43,7 +40,7 @@ public class MainView extends JPanel {
         sidebar.setPreferredSize(new Dimension(220, Integer.MAX_VALUE));
         sidebar.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        String[] navItems = {"首页", "检查项", "检查组", "用户管理", "预约管理", "报告管理", "关于"};
+        String[] navItems = {"首页", "预约管理", "报告管理", "关于"};
         for (String item : navItems) {
             JButton button = createNavButton(item);
             button.addActionListener(getNavActionListener(item));
@@ -107,15 +104,6 @@ public class MainView extends JPanel {
                 case "首页":
                     showHome();
                     break;
-                case "检查项":
-                    showCheckItems();
-                    break;
-                case "检查组":
-                    showCheckGroups();
-                    break;
-                case "用户管理":
-                    showUserManagement();
-                    break;
                 case "预约管理":
                     showAppointmentManagement();
                     break;
@@ -161,30 +149,6 @@ public class MainView extends JPanel {
             contentPanel.add(aboutView.getAboutPanel(), "about");
         }
         ((CardLayout) contentPanel.getLayout()).show(contentPanel, "about");
-    }
-
-    private void showCheckItems() {
-        if (checkItemPanel == null) {
-            checkItemPanel = new CheckItemPanel();
-            contentPanel.add(checkItemPanel, "checkItems");
-        }
-        ((CardLayout) contentPanel.getLayout()).show(contentPanel, "checkItems");
-    }
-
-    private void showCheckGroups() {
-        if (checkGroupPanel == null) {
-            checkGroupPanel = new CheckGroupPanel();
-            contentPanel.add(checkGroupPanel, "checkGroups");
-        }
-        ((CardLayout) contentPanel.getLayout()).show(contentPanel, "checkGroups");
-    }
-
-    private void showUserManagement() {
-        if (userPanel == null) {
-            userPanel = new UserPanel();
-            contentPanel.add(userPanel, "users");
-        }
-        ((CardLayout) contentPanel.getLayout()).show(contentPanel, "users");
     }
 
     private void showAppointmentManagement() {
