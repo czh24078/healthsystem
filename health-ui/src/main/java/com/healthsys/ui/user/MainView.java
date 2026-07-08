@@ -255,7 +255,7 @@ public class MainView {
 
         if (confirm == JOptionPane.YES_OPTION) {
             mainFrame.dispose();
-            new ChangePasswordView().showLogin();
+            new com.healthsys.ui.auth.LoginView().setVisible(true);
         }
     }
 
