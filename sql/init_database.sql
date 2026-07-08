@@ -153,9 +153,9 @@ CREATE TABLE IF NOT EXISTS reports (
 -- 3. 初始化数据
 -- =============================================
 
--- 插入默认管理员（密码: admin123，使用EncryptUtil加密）
+-- 插入默认管理员（密码: admin123，已用EncryptUtil AES加密）
 INSERT INTO admins (username, password_hash, real_name, role)
-VALUES ('admin', 'admin123', '超级管理员', 'SUPER_ADMIN')
+VALUES ('admin', 'bVsxzQ5cCjXRg1Dlb8n1ig==', '超级管理员', 'SUPER_ADMIN')
 ON DUPLICATE KEY UPDATE username = username;
 
 -- 插入示例检查项

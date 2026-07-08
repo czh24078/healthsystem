@@ -26,6 +26,7 @@ public class LoginView extends JFrame {
     private JButton registerButton;
     private JCheckBox rememberMeCheck;
     private JCheckBox showPasswordCheck;
+    private JComboBox<String> loginTypeCombo;
     private AuthService authService;
 
     public LoginView() {
@@ -82,6 +83,16 @@ public class LoginView extends JFrame {
         formPanel.add(createFieldPanel("用户名:", usernameField));
         formPanel.add(Box.createVerticalStrut(ROW_GAP));
         formPanel.add(createFieldPanel("密码:", passwordField));
+        formPanel.add(Box.createVerticalStrut(ROW_GAP));
+
+        // 登录类型选择
+        JPanel typePanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
+        typePanel.setOpaque(false);
+        loginTypeCombo = new JComboBox<>(new String[]{"普通用户", "管理员"});
+        loginTypeCombo.setFont(LABEL_FONT);
+        typePanel.add(new JLabel("登录身份:"));
+        typePanel.add(loginTypeCombo);
+        formPanel.add(typePanel);
         formPanel.add(Box.createVerticalStrut(ROW_GAP));
 
         // Options panel
@@ -240,7 +251,7 @@ public class LoginView extends JFrame {
         String password = new String(passwordField.getPassword());
 
         if (username.isEmpty()) {
-            showWarning("请输入用户名");
+            showWarning("请输入用户名" + ("管理员".equals(loginTypeCombo.getSelectedItem()) ? "（管理员账号）" : "（手机号）"));
             usernameField.requestFocus();
             return;
         }
@@ -251,7 +262,11 @@ public class LoginView extends JFrame {
             return;
         }
 
-        authService.handleLogin(username, password);
+        if ("管理员".equals(loginTypeCombo.getSelectedItem())) {
+            authService.handleAdminLogin(username, password);
+        } else {
+            authService.handleLogin(username, password);
+        }
     }
 
     private void showWarning(String message) {
