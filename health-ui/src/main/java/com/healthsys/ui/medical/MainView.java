@@ -14,6 +14,7 @@ public class MainView extends JPanel {
     private CheckGroupPanel checkGroupPanel;
     private UserPanel userPanel;
     private AppointmentPanel appointmentPanel;
+    private ReportPanel reportPanel;
     private AboutView aboutView;
 
     public MainView(Long doctorId, String doctorName) {
@@ -42,7 +43,7 @@ public class MainView extends JPanel {
         sidebar.setPreferredSize(new Dimension(220, Integer.MAX_VALUE));
         sidebar.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        String[] navItems = {"首页", "检查项", "检查组", "用户管理", "预约管理", "关于"};
+        String[] navItems = {"首页", "检查项", "检查组", "用户管理", "预约管理", "报告管理", "关于"};
         for (String item : navItems) {
             JButton button = createNavButton(item);
             button.addActionListener(getNavActionListener(item));
@@ -118,6 +119,9 @@ public class MainView extends JPanel {
                 case "预约管理":
                     showAppointmentManagement();
                     break;
+                case "报告管理":
+                    showReportManagement();
+                    break;
                 case "关于":
                     showAbout();
                     break;
@@ -189,6 +193,14 @@ public class MainView extends JPanel {
             contentPanel.add(appointmentPanel, "appointments");
         }
         ((CardLayout) contentPanel.getLayout()).show(contentPanel, "appointments");
+    }
+
+    private void showReportManagement() {
+        if (reportPanel == null) {
+            reportPanel = new ReportPanel(doctorId);
+            contentPanel.add(reportPanel, "reports");
+        }
+        ((CardLayout) contentPanel.getLayout()).show(contentPanel, "reports");
     }
 }
 
