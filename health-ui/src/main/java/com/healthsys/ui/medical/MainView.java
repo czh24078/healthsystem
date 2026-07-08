@@ -28,10 +28,10 @@ public class MainView extends JPanel {
     }
 
     public MainView(Users user) {
+        this(user != null ? user.getUserId() : null,
+             user != null ? user.getRealName() : null);
         this.currentUser = user;
         this.role = user != null ? user.getRole() : null;
-        this.doctorId = user != null ? user.getUserId() : null;
-        this.doctorName = user != null ? user.getRealName() : null;
     }
 
     public MainView(Long doctorId, String doctorName) {
@@ -63,10 +63,11 @@ public class MainView extends JPanel {
 
         List<String> navItems = new ArrayList<>();
         navItems.add("首页");
-        navItems.add("检查项");
-        navItems.add("检查组");
-        // 如果是医生（DOCTOR），隐藏“用户管理”入口
+        // 医生（DOCTOR）只显示：首页、预约管理、关于
+        // 管理员显示全部菜单
         if (!"DOCTOR".equalsIgnoreCase(role)) {
+            navItems.add("检查项");
+            navItems.add("检查组");
             navItems.add("用户管理");
         }
         navItems.add("预约管理");

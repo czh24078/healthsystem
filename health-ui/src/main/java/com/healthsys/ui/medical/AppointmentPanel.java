@@ -86,7 +86,7 @@ public class AppointmentPanel extends CrudPanel<Appointment> {
                 }).toList();
             }
         } else {
-            result = appointmentDAO.searchByFilters(null, dateFrom, dateTo, status);
+            result = appointmentDAO.searchByFilters(doctorId, dateFrom, dateTo, status);
         }
         tableModel.setData(result);
         tableModel.fireTableDataChanged();
@@ -108,7 +108,9 @@ public class AppointmentPanel extends CrudPanel<Appointment> {
         getEditButton().setVisible(false);
         getDeleteButton().setVisible(false);
 
-        // 开始检查按钮
+        JPanel buttonPanel = (JPanel) getAddButton().getParent();
+
+        // 开始检查按钮 — 打开检查结果录入对话框
         JButton startExamBtn = CrudPanel.createStyledButton("开始检查", new Color(102, 204, 153));
         startExamBtn.addActionListener(e -> {
             Appointment selected = getSelectedAppointment();
@@ -124,13 +126,88 @@ public class AppointmentPanel extends CrudPanel<Appointment> {
                 JOptionPane.showMessageDialog(this, "该预约已取消", "提示", JOptionPane.WARNING_MESSAGE);
                 return;
             }
-            JOptionPane.showMessageDialog(this, "检查结果录入功能开发中…\n预约ID: " + selected.getId()
-                    + "\n患者: " + selected.getUserName()
-                    + "\n检查组: " + selected.getGroupName(),
-                    "开始检查", JOptionPane.INFORMATION_MESSAGE);
+            JFrame parentFrame = getParentFrame();
+            ExamResultDialog dialog = new ExamResultDialog(parentFrame, selected, doctorId);
+            dialog.setVisible(true);
+            if (dialog.isSaved()) {
+                refreshData();
+            }
         });
-        JPanel buttonPanel = (JPanel) getAddButton().getParent();
         buttonPanel.add(startExamBtn, 0);
+
+        // 上传报告按钮 — 仅对已完成预约可用
+        JButton uploadReportBtn = CrudPanel.createStyledButton("上传报告", new Color(153, 204, 255));
+        uploadReportBtn.addActionListener(e -> {
+            Appointment selected = getSelectedAppointment();
+            if (selected == null) {
+                JOptionPane.showMessageDialog(this, "请先选择预约", "提示", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            if (!"COMPLETED".equals(selected.getStatus())) {
+                JOptionPane.showMessageDialog(this, "请先完成检查后再上传报告", "提示", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            JFrame parentFrame = getParentFrame();
+            ReportDialog dialog = new ReportDialog(parentFrame, selected.getId(), doctorId);
+            dialog.setVisible(true);
+            if (dialog.isSaved()) {
+                refreshData();
+            }
+        });
+        buttonPanel.add(uploadReportBtn);
+
+        // 查看结果按钮 — 显示已有检查结果
+        JButton viewResultBtn = CrudPanel.createStyledButton("查看结果", new Color(255, 204, 153));
+        viewResultBtn.addActionListener(e -> {
+            Appointment selected = getSelectedAppointment();
+            if (selected == null) {
+                JOptionPane.showMessageDialog(this, "请先选择预约", "提示", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            showExistingResults(selected);
+        });
+        buttonPanel.add(viewResultBtn);
+    }
+
+    private JFrame getParentFrame() {
+        Container parent = getParent();
+        while (parent != null && !(parent instanceof JFrame)) {
+            parent = parent.getParent();
+        }
+        return (JFrame) parent;
+    }
+
+    private void showExistingResults(Appointment appointment) {
+        com.healthsys.dao.ExamRecordDAO examRecordDAO = new com.healthsys.dao.ExamRecordDAO();
+        java.util.List<com.healthsys.common.entity.ExamRecord> records =
+                examRecordDAO.getExamRecordsByAppointment(appointment.getId());
+
+        if (records.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "该预约暂无检查结果。", "查看结果", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("预约ID: ").append(appointment.getId())
+          .append("  患者: ").append(appointment.getUserName())
+          .append("  检查组: ").append(appointment.getGroupName()).append("\n\n");
+
+        for (com.healthsys.common.entity.ExamRecord r : records) {
+            sb.append("● ").append(r.getItemName() != null ? r.getItemName() : "检查项#" + r.getItemId())
+              .append(": ").append(r.getResultValue() != null ? r.getResultValue() : "-")
+              .append(r.getIsAbnormal() != null && r.getIsAbnormal() ? " 【异常】" : "")
+              .append(r.getDoctorNote() != null ? "\n  备注: " + r.getDoctorNote() : "")
+              .append("\n");
+        }
+
+        JTextArea textArea = new JTextArea(sb.toString());
+        textArea.setFont(new Font("微软雅黑", Font.PLAIN, 14));
+        textArea.setEditable(false);
+        textArea.setBackground(new Color(250, 250, 250));
+        JScrollPane scrollPane = new JScrollPane(textArea);
+        scrollPane.setPreferredSize(new Dimension(500, 350));
+
+        JOptionPane.showMessageDialog(this, scrollPane, "检查结果", JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void initializeTable() {
@@ -168,7 +245,7 @@ public class AppointmentPanel extends CrudPanel<Appointment> {
     @Override
     public void refreshData() {
         LocalDate today = LocalDate.now();
-        List<Appointment> result = appointmentDAO.searchByFilters(null, today, today, null);
+        List<Appointment> result = appointmentDAO.searchByFilters(doctorId, today, today, null);
         tableModel.setData(result);
         tableModel.fireTableDataChanged();
     }
