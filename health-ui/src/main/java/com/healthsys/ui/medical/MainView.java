@@ -7,6 +7,8 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 public class MainView extends JPanel {
+    private final Long doctorId;
+    private final String doctorName;
     private JPanel contentPanel;
     private CheckItemPanel checkItemPanel;
     private CheckGroupPanel checkGroupPanel;
@@ -14,7 +16,9 @@ public class MainView extends JPanel {
     private AppointmentPanel appointmentPanel;
     private AboutView aboutView;
 
-    public MainView() {
+    public MainView(Long doctorId, String doctorName) {
+        this.doctorId = doctorId;
+        this.doctorName = doctorName;
         setLayout(new BorderLayout());
         setBackground(new Color(245, 245, 245));
 
@@ -181,7 +185,7 @@ public class MainView extends JPanel {
 
     private void showAppointmentManagement() {
         if (appointmentPanel == null) {
-            appointmentPanel = new AppointmentPanel();
+            appointmentPanel = new AppointmentPanel(doctorId);
             contentPanel.add(appointmentPanel, "appointments");
         }
         ((CardLayout) contentPanel.getLayout()).show(contentPanel, "appointments");
