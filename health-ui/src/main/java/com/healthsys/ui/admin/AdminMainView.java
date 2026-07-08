@@ -1,6 +1,8 @@
 package com.healthsys.ui.admin;
 
 import com.healthsys.ui.medical.UserPanel;
+import com.healthsys.ui.medical.CheckItemPanel;
+import com.healthsys.ui.medical.CheckGroupPanel;
 
 import javax.swing.*;
 import java.awt.*;
@@ -11,6 +13,8 @@ import java.awt.event.MouseEvent;
 public class AdminMainView extends JPanel {
     private JPanel contentPanel;
     private UserPanel userPanel;
+    private CheckItemPanel checkItemPanel;
+    private CheckGroupPanel checkGroupPanel;
     private DoctorPanel doctorPanel;
     private AboutView aboutView;
 
@@ -30,7 +34,7 @@ public class AdminMainView extends JPanel {
         sidebar.setPreferredSize(new Dimension(220, Integer.MAX_VALUE));
         sidebar.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        String[] navItems = {"首页", "用户管理", "医生管理", "关于"};
+        String[] navItems = {"首页", "用户管理", "医生管理", "检查项管理", "检查组管理", "关于"};
         for (String item : navItems) {
             JButton button = createNavButton(item);
             button.addActionListener(getNavActionListener(item));
@@ -102,6 +106,8 @@ public class AdminMainView extends JPanel {
                 case "首页" -> showHome();
                 case "用户管理" -> showUserManagement();
                 case "医生管理" -> showDoctorManagement();
+                case "检查项管理" -> showCheckItemManagement();
+                case "检查组管理" -> showCheckGroupManagement();
                 case "关于" -> showAbout();
             }
         };
@@ -162,6 +168,24 @@ public class AdminMainView extends JPanel {
         }
         ((CardLayout) contentPanel.getLayout()).show(contentPanel, "doctors");
         doctorPanel.refreshData();
+    }
+
+    private void showCheckItemManagement() {
+        if (checkItemPanel == null) {
+            checkItemPanel = new CheckItemPanel();
+            contentPanel.add(checkItemPanel, "checkItems");
+        }
+        ((CardLayout) contentPanel.getLayout()).show(contentPanel, "checkItems");
+        checkItemPanel.refreshData();
+    }
+
+    private void showCheckGroupManagement() {
+        if (checkGroupPanel == null) {
+            checkGroupPanel = new CheckGroupPanel();
+            contentPanel.add(checkGroupPanel, "checkGroups");
+        }
+        ((CardLayout) contentPanel.getLayout()).show(contentPanel, "checkGroups");
+        checkGroupPanel.refreshData();
     }
 }
 

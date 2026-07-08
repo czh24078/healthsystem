@@ -1,10 +1,14 @@
 package com.healthsys.ui.medical;
 
+import com.healthsys.common.entity.Users;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainView extends JPanel {
     private JPanel contentPanel;
@@ -14,7 +18,17 @@ public class MainView extends JPanel {
     private AppointmentPanel appointmentPanel;
     private AboutView aboutView;
 
+    private Users currentUser;
+    private String role;
+
     public MainView() {
+        this(null);
+    }
+
+    public MainView(Users user) {
+        this.currentUser = user;
+        this.role = user != null ? user.getRole() : null;
+
         setLayout(new BorderLayout());
         setBackground(new Color(245, 245, 245));
 
@@ -38,7 +52,17 @@ public class MainView extends JPanel {
         sidebar.setPreferredSize(new Dimension(220, Integer.MAX_VALUE));
         sidebar.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        String[] navItems = {"首页", "检查项", "检查组", "用户管理", "预约管理", "关于"};
+        List<String> navItems = new ArrayList<>();
+        navItems.add("首页");
+        navItems.add("检查项");
+        navItems.add("检查组");
+        // 如果是医生（DOCTOR），隐藏“用户管理”入口
+        if (!"DOCTOR".equalsIgnoreCase(role)) {
+            navItems.add("用户管理");
+        }
+        navItems.add("预约管理");
+        navItems.add("关于");
+
         for (String item : navItems) {
             JButton button = createNavButton(item);
             button.addActionListener(getNavActionListener(item));

@@ -155,7 +155,7 @@ public class CheckItemPanel extends CrudPanel<CheckItem> {
     }
 
     private class CheckItemTableModel extends AbstractTableModel {
-        private String[] columnNames = {"ID", "名称", "代码", "描述", "正常范围", "价格", "创建时间"};
+        private String[] columnNames = {"ID", "名称", "代码", "分类", "单位", "参考范围", "价格", "状态", "创建时间"};
         private List<CheckItem> data;
 
         public void setData(List<CheckItem> data) {
@@ -184,10 +184,12 @@ public class CheckItemPanel extends CrudPanel<CheckItem> {
                 case 0: return item.getId();
                 case 1: return item.getName();
                 case 2: return item.getCode();
-                case 3: return item.getDescription();
-                case 4: return item.getNormalRange();
-                case 5: return item.getPrice();
-                case 6: return item.getCreatedAt();
+                case 3: return item.getCategory();
+                case 4: return item.getUnit();
+                case 5: return item.getReferenceRange();
+                case 6: return item.getPrice();
+                case 7: return item.getStatus() != null && item.getStatus() == 1 ? "启用" : "停用";
+                case 8: return item.getCreatedAt();
                 default: return null;
             }
         }

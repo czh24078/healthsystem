@@ -14,9 +14,14 @@ public class DbUtil {
         try (InputStream input = DbUtil.class.getClassLoader().getResourceAsStream("db.properties")) {
             if (input != null) {
                 props.load(input);
+                String url = props.getProperty("db.url");
+                if (url != null && url.contains("utf8mb4")) {
+                    url = url.replace("utf8mb4", "UTF-8");
+                    props.setProperty("db.url", url);
+                }
             } else {
                 // 配置文件不存在时使用默认值（开发环境）
-                props.setProperty("db.url", "jdbc:mysql://localhost:3306/healthsys?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8");
+                props.setProperty("db.url", "jdbc:mysql://localhost:3306/healthsys?useSSL=false&serverTimezone=UTC&useUnicode=true&characterEncoding=UTF-8&characterSetResults=UTF-8");
                 props.setProperty("db.user", "root");
                 props.setProperty("db.password", "");
             }

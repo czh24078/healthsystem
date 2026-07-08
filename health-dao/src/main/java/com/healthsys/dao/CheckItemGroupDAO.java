@@ -86,13 +86,84 @@ public class CheckItemGroupDAO {
         } catch (SQLException e) { e.printStackTrace(); return false; }
     }
 
+    /**
+     * Update group and replace associated item relations in a transaction.
+     */
+    public boolean updateGroup(CheckItemGroup group, java.util.List<Long> itemIds) {
+        Connection conn = null;
+        try {
+            conn = DbUtil.getConnection();
+            conn.setAutoCommit(false);
+
+            String sql = "UPDATE check_groups SET group_name=?, description=?, price=?, daily_limit=?, status=?, updated_at=? WHERE group_id=?";
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setString(1, group.getGroupName());
+                pstmt.setString(2, group.getDescription());
+                pstmt.setDouble(3, group.getPrice());
+                pstmt.setInt(4, group.getDailyLimit() != null ? group.getDailyLimit() : 50);
+                pstmt.setInt(5, group.getStatus() != null ? group.getStatus() : 1);
+                pstmt.setObject(6, java.time.LocalDateTime.now());
+                pstmt.setLong(7, group.getGroupId());
+                if (pstmt.executeUpdate() == 0) { conn.rollback(); return false; }
+            }
+
+            // 清理旧关系并插入新关系
+            String delRel = "DELETE FROM group_item_relation WHERE group_id = ?";
+            try (PreparedStatement delStmt = conn.prepareStatement(delRel)) {
+                delStmt.setLong(1, group.getGroupId());
+                delStmt.executeUpdate();
+            }
+
+            if (itemIds != null && !itemIds.isEmpty()) {
+                String insertRel = "INSERT INTO group_item_relation (group_id, item_id) VALUES (?, ?)";
+                try (PreparedStatement relStmt = conn.prepareStatement(insertRel)) {
+                    for (Long itemId : itemIds) {
+                        relStmt.setLong(1, group.getGroupId());
+                        relStmt.setLong(2, itemId);
+                        relStmt.addBatch();
+                    }
+                    relStmt.executeBatch();
+                }
+            }
+
+            conn.commit();
+            return true;
+        } catch (SQLException e) {
+            try { if (conn != null) conn.rollback(); } catch (SQLException ex) {}
+            e.printStackTrace();
+            return false;
+        } finally {
+            try { if (conn != null) conn.setAutoCommit(true); } catch (SQLException e) {}
+        }
+    }
+
     public boolean delete(Long id) {
-        String sql = "DELETE FROM check_groups WHERE group_id = ?";
-        try (Connection conn = DbUtil.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setLong(1, id);
-            return pstmt.executeUpdate() > 0;
-        } catch (SQLException e) { e.printStackTrace(); return false; }
+        Connection conn = null;
+        try {
+            conn = DbUtil.getConnection();
+            conn.setAutoCommit(false);
+
+            // 先删除关联表，防止孤儿记录或外键失败
+            String delRel = "DELETE FROM group_item_relation WHERE group_id = ?";
+            try (PreparedStatement relStmt = conn.prepareStatement(delRel)) {
+                relStmt.setLong(1, id);
+                relStmt.executeUpdate();
+            }
+
+            String sql = "DELETE FROM check_groups WHERE group_id = ?";
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setLong(1, id);
+                int affected = pstmt.executeUpdate();
+                conn.commit();
+                return affected > 0;
+            }
+        } catch (SQLException e) {
+            try { if (conn != null) conn.rollback(); } catch (SQLException ex) {}
+            e.printStackTrace();
+            return false;
+        } finally {
+            try { if (conn != null) conn.setAutoCommit(true); } catch (SQLException e) {}
+        }
     }
 
     // ==================== 检查组↔检查项关联 ====================

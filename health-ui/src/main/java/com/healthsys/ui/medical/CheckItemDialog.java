@@ -15,9 +15,11 @@ public class CheckItemDialog extends JDialog {
     // 对话框组件
     private JTextField nameField;
     private JTextField codeField;
-    private JTextField descriptionField;
-    private JTextField normalRangeField;
+    private JTextField categoryField;
+    private JTextField unitField;
+    private JTextField referenceRangeField;
     private JTextField priceField;
+    private JComboBox<String> statusCombo;
 
     // 主色调
     private final Color MAIN_COLOR = new Color(70, 104, 197);
@@ -40,7 +42,7 @@ public class CheckItemDialog extends JDialog {
         mainPanel.setBackground(Color.WHITE);
 
         // 表单面板
-        JPanel formPanel = new JPanel(new GridLayout(5, 2, 15, 15));
+        JPanel formPanel = new JPanel(new GridLayout(7, 2, 15, 15));
         formPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         formPanel.setBackground(Color.WHITE);
 
@@ -51,10 +53,15 @@ public class CheckItemDialog extends JDialog {
         // 添加表单字段
         addFormField(formPanel, "名称:", nameField = createStyledTextField(checkItem.getName(), fieldFont), labelFont);
         addFormField(formPanel, "代码:", codeField = createStyledTextField(checkItem.getCode(), fieldFont), labelFont);
-        addFormField(formPanel, "描述:", descriptionField = createStyledTextField(checkItem.getDescription(), fieldFont), labelFont);
-        addFormField(formPanel, "正常范围:", normalRangeField = createStyledTextField(checkItem.getNormalRange(), fieldFont), labelFont);
+        addFormField(formPanel, "分类:", categoryField = createStyledTextField(checkItem.getCategory(), fieldFont), labelFont);
+        addFormField(formPanel, "单位:", unitField = createStyledTextField(checkItem.getUnit(), fieldFont), labelFont);
+        addFormField(formPanel, "参考范围:", referenceRangeField = createStyledTextField(checkItem.getReferenceRange(), fieldFont), labelFont);
         addFormField(formPanel, "价格:", priceField = createStyledTextField(
                 checkItem.getPrice() != null ? checkItem.getPrice().toString() : "", fieldFont), labelFont);
+        statusCombo = new JComboBox<>(new String[]{"启用", "停用"});
+        statusCombo.setFont(fieldFont);
+        statusCombo.setSelectedIndex(checkItem.getStatus() != null && checkItem.getStatus() == 0 ? 1 : 0);
+        addFormField(formPanel, "状态:", statusCombo, labelFont);
 
         mainPanel.add(formPanel, BorderLayout.CENTER);
 
@@ -92,6 +99,13 @@ public class CheckItemDialog extends JDialog {
         panel.add(textField);
     }
 
+    private void addFormField(JPanel panel, String labelText, JComponent component, Font font) {
+        JLabel label = new JLabel(labelText);
+        label.setFont(font);
+        panel.add(label);
+        panel.add(component);
+    }
+
     private JTextField createStyledTextField(String text, Font font) {
         JTextField field = new JTextField(text);
         field.setFont(font);
@@ -120,9 +134,11 @@ public class CheckItemDialog extends JDialog {
     public CheckItem getCheckItem() {
         checkItem.setName(nameField.getText());
         checkItem.setCode(codeField.getText());
-        checkItem.setDescription(descriptionField.getText());
-        checkItem.setNormalRange(normalRangeField.getText());
+        checkItem.setCategory(categoryField.getText());
+        checkItem.setUnit(unitField.getText());
+        checkItem.setReferenceRange(referenceRangeField.getText());
         checkItem.setPrice(Double.parseDouble(priceField.getText()));
+        checkItem.setStatus(statusCombo.getSelectedIndex() == 0 ? 1 : 0);
         return checkItem;
     }
 }

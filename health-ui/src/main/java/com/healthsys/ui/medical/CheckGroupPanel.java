@@ -67,7 +67,8 @@ public class CheckGroupPanel extends CrudPanel<CheckItemGroup> {
             CheckGroupDialog dialog = new CheckGroupDialog(null);
             if (dialog.showDialog() == CheckGroupDialog.OK_OPTION) {
                 CheckItemGroup newGroup = dialog.getCheckItemGroup();
-                if (checkItemGroupDAO.add(newGroup)) {
+                java.util.List<Long> itemIds = dialog.getSelectedItemIds();
+                if (checkItemGroupDAO.createGroup(newGroup, itemIds)) {
                     refreshData();
                     JOptionPane.showMessageDialog(this, "检查组添加成功", "成功", JOptionPane.INFORMATION_MESSAGE);
                 } else {
@@ -87,7 +88,8 @@ public class CheckGroupPanel extends CrudPanel<CheckItemGroup> {
             CheckGroupDialog dialog = new CheckGroupDialog(selected);
             if (dialog.showDialog() == CheckGroupDialog.OK_OPTION) {
                 CheckItemGroup updatedGroup = dialog.getCheckItemGroup();
-                if (checkItemGroupDAO.update(updatedGroup)) {
+                java.util.List<Long> itemIds = dialog.getSelectedItemIds();
+                if (checkItemGroupDAO.updateGroup(updatedGroup, itemIds)) {
                     refreshData();
                     JOptionPane.showMessageDialog(this, "检查组更新成功", "成功", JOptionPane.INFORMATION_MESSAGE);
                 } else {
@@ -189,7 +191,7 @@ public class CheckGroupPanel extends CrudPanel<CheckItemGroup> {
     }
 
     private class CheckGroupTableModel extends AbstractTableModel {
-        private String[] columnNames = {"ID", "检查组名称", "检查组描述", "价格", "创建时间"};
+        private String[] columnNames = {"ID", "检查组名称", "检查组描述", "价格", "每日限额", "状态", "创建时间", "更新时间"};
         private List<CheckItemGroup> data;
 
         public void setData(List<CheckItemGroup> data) {
@@ -219,7 +221,10 @@ public class CheckGroupPanel extends CrudPanel<CheckItemGroup> {
                 case 1: return group.getName();
                 case 2: return group.getDescription();
                 case 3: return String.format("¥%.2f", group.getPrice());
-                case 4: return group.getCreatedAt();
+                case 4: return group.getDailyLimit();
+                case 5: return group.getStatusDisplay();
+                case 6: return group.getCreatedAt();
+                case 7: return group.getUpdatedAt();
                 default: return null;
             }
         }
