@@ -10,35 +10,39 @@ Write-Host "============================================" -ForegroundColor Cyan
 Write-Host "`n[1/3] Checking MySQL..." -ForegroundColor Yellow
 $mysql = Get-Service MySQL80 -ErrorAction SilentlyContinue
 if ($mysql -and $mysql.Status -eq "Running") {
-    Write-Host "  [OK] MySQL already running" -ForegroundColor Green
+    Write-Host "  [OK] MySQL running" -ForegroundColor Green
 } else {
-    Write-Host "  MySQL not running, trying to start..." -ForegroundColor Gray
+    Write-Host "  Starting MySQL..." -ForegroundColor Gray
     try { Start-Service MySQL80 -ErrorAction Stop; Write-Host "  [OK] MySQL started" -ForegroundColor Green }
-    catch { Write-Host "  [WARN] Cannot start MySQL (need Admin). Continuing anyway..." -ForegroundColor Yellow }
+    catch { Write-Host "  [WARN] Cannot start MySQL (run as Admin)" -ForegroundColor Yellow }
 }
 
-# 2. Compile
-Write-Host "`n[2/3] Compiling..." -ForegroundColor Yellow
+# 2. Build + Install
+Write-Host "`n[2/3] Building..." -ForegroundColor Yellow
 $mvn = "$env:USERPROFILE\apache-maven-3.9.16\bin\mvn.cmd"
-if (-not (Test-Path $mvn)) {
-    Write-Host "  [ERROR] Maven not found: $mvn" -ForegroundColor Red
-    pause; exit 1
-}
-& $mvn compile -q 2>&1 | Out-Null
+& $mvn install -DskipTests -q 2>&1 | Out-Null
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "  [ERROR] Compile failed!" -ForegroundColor Red
-    & $mvn compile
+    Write-Host "  [ERROR] Build failed!" -ForegroundColor Red
+    & $mvn install -DskipTests
     pause; exit 1
 }
-Write-Host "  [OK] Compile success" -ForegroundColor Green
+Write-Host "  [OK] Build success" -ForegroundColor Green
 
-# 3. Launch
-Write-Host "`n[3/3] Launching application..." -ForegroundColor Yellow
-$cp = (& $mvn -pl health-ui dependency:build-classpath -DincludeScope=runtime -Dmdep.outputFile=/dev/stdout -q) -join ''
+# 3. Classpath + Launch
+Write-Host "`n[3/3] Launching..." -ForegroundColor Yellow
+$tmpFile = "$env:TEMP\health_cp.txt"
+& $mvn -pl health-ui dependency:build-classpath -DincludeScope=runtime "-Dmdep.outputFile=$tmpFile" -q 2>&1 | Out-Null
+
+if (Test-Path $tmpFile) {
+    $cp = (Get-Content $tmpFile -Raw).Trim()
+    Remove-Item $tmpFile
+} else {
+    $cp = ""
+}
+
 $classes = "health-ui\target\classes;health-common\target\classes;health-dao\target\classes;health-service\target\classes"
 $fullCp = "$classes;$cp"
 
 Start-Process javaw -ArgumentList "-cp `"$fullCp`"", "com.healthsys.ui.Launcher"
-
-Write-Host "  [OK] Application launched!" -ForegroundColor Green
+Write-Host "  [OK] App launched!" -ForegroundColor Green
 Write-Host "============================================" -ForegroundColor Cyan
