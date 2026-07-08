@@ -196,6 +196,17 @@ public class AppointmentDAO {
         } catch (SQLException e) { e.printStackTrace(); return false; }
     }
 
+    public boolean assignDoctor(Long appointmentId, Long doctorId, String status) {
+        String sql = "UPDATE appointments SET doctor_id = ?, status = ? WHERE appointment_id = ?";
+        try (Connection conn = DbUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setLong(1, doctorId);
+            stmt.setString(2, status);
+            stmt.setLong(3, appointmentId);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) { e.printStackTrace(); return false; }
+    }
+
     // ============ 医生端方法 ============
 
     public List<Appointment> searchByFilters(Long doctorId, java.time.LocalDate dateFrom, java.time.LocalDate dateTo, String status) {

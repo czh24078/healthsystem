@@ -126,10 +126,8 @@ public class AppointmentPanel extends CrudPanel<Appointment> {
                 JOptionPane.showMessageDialog(this, "该预约已取消", "提示", JOptionPane.WARNING_MESSAGE);
                 return;
             }
-            JFrame parentFrame = getParentFrame();
-            ExamResultDialog dialog = new ExamResultDialog(parentFrame, selected, doctorId);
-            dialog.setVisible(true);
-            if (dialog.isSaved()) {
+            ExamResultEntryDialog dialog = new ExamResultEntryDialog(doctorId, selected);
+            if (dialog.showDialog() == ExamResultEntryDialog.OK_OPTION) {
                 refreshData();
             }
         });
