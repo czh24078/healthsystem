@@ -110,7 +110,7 @@ CREATE TABLE IF NOT EXISTS appointments (
     payment_status BOOLEAN DEFAULT FALSE COMMENT '支付状态: FALSE-未支付 TRUE-已支付',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    INDEX idx_app_user_date (user_id, exam_date) COMMENT '加速用户预约列表查询',
+    UNIQUE KEY uk_user_exam (user_id, exam_date, exam_time_slot) COMMENT '同一用户同时段仅可预约一次',
     INDEX idx_app_status (status) COMMENT '加速状态筛选',
     INDEX idx_app_exam_date (exam_date) COMMENT '加速医生今日预约列表查询',
     INDEX idx_app_doctor (doctor_id) COMMENT '加速医生预约查询',
