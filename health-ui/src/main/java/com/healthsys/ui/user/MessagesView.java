@@ -15,6 +15,8 @@ public class MessagesView {
     private JPanel messagesPanel;
     private Users currentUser;
     private AppointmentService controller;
+    private JTable groupTable;
+    private DefaultTableModel groupModel;
 
     public MessagesView(Users currentUser) {
         this.currentUser = currentUser;
@@ -39,14 +41,14 @@ public class MessagesView {
 
         // 检查组表格
         String[] groupColumns = { "ID", "检查组名称", "描述", "价格", "预约", "查看详情" };
-        DefaultTableModel groupModel = new DefaultTableModel(groupColumns, 0) {
+        groupModel = new DefaultTableModel(groupColumns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return column == 4 || column == 5; // 只有操作列可编辑
             }
         };
 
-        JTable groupTable = new JTable(groupModel);
+        groupTable = new JTable(groupModel);
         groupTable.setRowHeight(30);
         groupTable.getColumnModel().getColumn(4).setCellRenderer(new ButtonRenderer());
         groupTable.getColumnModel().getColumn(4)
@@ -56,15 +58,14 @@ public class MessagesView {
                 .setCellEditor(new MessagesDetailButtonEditor(new JCheckBox(), messagesPanel, controller));
 
         // 加载检查组数据
-        loadGroupData(groupModel);
+        loadGroupData();
 
         messagesPanel.add(titlePanel, BorderLayout.NORTH);
         messagesPanel.add(new JScrollPane(groupTable), BorderLayout.CENTER);
     }
 
-    private void loadGroupData(DefaultTableModel model) {
-        model.setRowCount(0);
-        // 加载检查组数据
+    private void loadGroupData() {
+        groupModel.setRowCount(0);
         java.util.List<CheckItemGroup> groups = controller.getAllGroups();
         for (CheckItemGroup pkg : groups) {
             Object[] rowData = {
@@ -75,14 +76,12 @@ public class MessagesView {
                     "预约",
                     "查看详情"
             };
-            model.addRow(rowData);
+            groupModel.addRow(rowData);
         }
     }
 
     private void refreshGroupData() {
-        JTable table = (JTable) ((JScrollPane) messagesPanel.getComponent(1))
-                .getViewport().getView();
-        loadGroupData((DefaultTableModel) table.getModel());
+        loadGroupData();
     }
 
     public JPanel getMessagesPanel() {
@@ -162,7 +161,7 @@ public class MessagesView {
 
         JButton submitBtn = new JButton("确认预约");
         submitBtn.setBackground(new Color(41, 75, 166));
-        submitBtn.setForeground(Color.WHITE);
+        submitBtn.setForeground(Color.BLACK);
         submitBtn.setFont(new Font("微软雅黑", Font.BOLD, 16));
         submitBtn.setFocusPainted(false);
         gbc.gridx = 0;
@@ -197,6 +196,16 @@ public class MessagesView {
             if (controller.createAppointment(currentUser, groupId, appointmentTime)) {
                 JOptionPane.showMessageDialog(timeDialog, "预约成功!", "成功", JOptionPane.INFORMATION_MESSAGE);
                 timeDialog.dispose();
+                int payOption = JOptionPane.showConfirmDialog(
+                        messagesPanel,
+                        "是否立即支付？",
+                        "支付确认",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.QUESTION_MESSAGE);
+                if (payOption != JOptionPane.YES_OPTION) {
+                    JOptionPane.showMessageDialog(messagesPanel, "您可稍后支付，请注意支付截止时间", "提示",
+                            JOptionPane.INFORMATION_MESSAGE);
+                }
             } else {
                 JOptionPane.showMessageDialog(timeDialog, "预约失败!", "错误", JOptionPane.ERROR_MESSAGE);
             }
@@ -224,10 +233,7 @@ class MessagesDetailButtonEditor extends DefaultCellEditor {
         JButton button = new JButton(label);
         button.addActionListener(e -> {
             Long groupId = (Long) table.getValueAt(row, 0);
-            CheckItemGroup selectedGroup = controller.getAllGroups().stream()
-                    .filter(p -> p.getId().equals(groupId))
-                    .findFirst()
-                    .orElse(null);
+            CheckItemGroup selectedGroup = controller.getCheckItemGroupById(groupId);
 
             if (selectedGroup != null) {
                 showGroupDetail(selectedGroup);

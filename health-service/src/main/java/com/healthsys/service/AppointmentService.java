@@ -7,6 +7,7 @@ import com.healthsys.common.entity.Appointment;
 import com.healthsys.common.entity.CheckItem;
 import com.healthsys.common.entity.CheckItemGroup;
 import com.healthsys.common.entity.Users;
+import java.util.ArrayList;
 import java.util.List;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -45,7 +46,7 @@ public class AppointmentService {
 
     // 兼容旧版：用java.util.Date（转为LocalDateTime作为预约时间）
     public boolean createAppointment(Users user, Long groupId, java.util.Date appointmentTime) {
-        LocalDateTime ldt = appointmentTime.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDateTime();
+        LocalDateTime ldt = appointmentTime.toInstant().atZone(java.time.ZoneId.of("UTC")).toLocalDateTime();
         Appointment appointment = new Appointment(user.getId(), groupId, ldt);
         appointment.setExamDate(ldt.toLocalDate());
         return appointmentDAO.createAppointment(appointment);
@@ -98,6 +99,35 @@ public class AppointmentService {
 
     public List<CheckItem> getAllTests() {
         return checkItemDAO.getAll();
+    }
+
+    /**
+     * 根据预约ID获取该预约对应的检查组下的所有检查项目
+     */
+    public List<CheckItem> getCheckItemsByAppointmentId(Long appointmentId) {
+        Appointment appointment = appointmentDAO.getAppointmentById(appointmentId);
+        if (appointment == null || appointment.getGroupId() == null) {
+            return new ArrayList<>();
+        }
+        return checkItemGroupDAO.getCheckItemsByGroup(appointment.getGroupId());
+    }
+
+    /**
+     * 根据预约ID获取完整的预约详情（含检查组信息和检查项目列表）
+     */
+    public CheckItemGroup getCheckGroupByAppointmentId(Long appointmentId) {
+        Appointment appointment = appointmentDAO.getAppointmentById(appointmentId);
+        if (appointment == null || appointment.getGroupId() == null) {
+            return null;
+        }
+        return checkItemGroupDAO.getById(appointment.getGroupId());
+    }
+
+    /**
+     * 直接根据 groupId 查询检查项（避免重复查询 appointment）
+     */
+    public List<CheckItem> getCheckItemsByGroupId(Long groupId) {
+        return checkItemGroupDAO.getCheckItemsByGroup(groupId);
     }
 
     // 兼容旧方法名

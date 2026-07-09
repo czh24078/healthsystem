@@ -34,7 +34,7 @@ public class CheckItemGroupDAO {
 
     public List<CheckItemGroup> getAll() {
         List<CheckItemGroup> groups = new ArrayList<>();
-        String sql = "SELECT * FROM check_groups ORDER BY group_name";
+        String sql = "SELECT * FROM check_groups ORDER BY group_id ASC";
         try (Connection conn = DbUtil.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
@@ -133,7 +133,10 @@ public class CheckItemGroupDAO {
             e.printStackTrace();
             return false;
         } finally {
-            try { if (conn != null) conn.setAutoCommit(true); } catch (SQLException e) {}
+            if (conn != null) {
+                try { conn.setAutoCommit(true); } catch (SQLException e) {}
+                try { conn.close(); } catch (SQLException e) {}
+            }
         }
     }
 
@@ -143,7 +146,6 @@ public class CheckItemGroupDAO {
             conn = DbUtil.getConnection();
             conn.setAutoCommit(false);
 
-            // 先删除关联表，防止孤儿记录或外键失败
             String delRel = "DELETE FROM group_item_relation WHERE group_id = ?";
             try (PreparedStatement relStmt = conn.prepareStatement(delRel)) {
                 relStmt.setLong(1, id);
@@ -162,7 +164,10 @@ public class CheckItemGroupDAO {
             e.printStackTrace();
             return false;
         } finally {
-            try { if (conn != null) conn.setAutoCommit(true); } catch (SQLException e) {}
+            if (conn != null) {
+                try { conn.setAutoCommit(true); } catch (SQLException e) {}
+                try { conn.close(); } catch (SQLException e) {}
+            }
         }
     }
 
@@ -249,7 +254,10 @@ public class CheckItemGroupDAO {
             e.printStackTrace();
             return false;
         } finally {
-            try { if (conn != null) conn.setAutoCommit(true); } catch (SQLException e) {}
+            if (conn != null) {
+                try { conn.setAutoCommit(true); } catch (SQLException e) {}
+                try { conn.close(); } catch (SQLException e) {}
+            }
         }
     }
 

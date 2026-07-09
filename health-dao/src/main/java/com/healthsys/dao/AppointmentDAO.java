@@ -133,8 +133,8 @@ public class AppointmentDAO {
     }
 
     public boolean createAppointment(Appointment appointment) {
-        String sql = "INSERT INTO appointments (user_id, group_id, doctor_id, appointment_time, exam_date, exam_time_slot, status, payment_status) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO appointments (user_id, group_id, doctor_id, appointment_time, exam_date, exam_time_slot, status, payment_status, created_at) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DbUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setLong(1, appointment.getUserId());
@@ -146,6 +146,7 @@ public class AppointmentDAO {
             stmt.setString(6, appointment.getExamTimeSlot());
             stmt.setString(7, appointment.getStatus() != null ? appointment.getStatus() : "PENDING");
             stmt.setBoolean(8, Boolean.TRUE.equals(appointment.getPaymentStatus()));
+            stmt.setObject(9, LocalDateTime.now());
             if (stmt.executeUpdate() > 0) {
                 try (ResultSet rs = stmt.getGeneratedKeys()) {
                     if (rs.next()) { appointment.setAppointmentId(rs.getLong(1)); return true; }
@@ -157,7 +158,7 @@ public class AppointmentDAO {
 
     public List<Appointment> getUserAppointments(long userId) {
         List<Appointment> appointments = new ArrayList<>();
-        String sql = "SELECT * FROM appointments WHERE user_id = ? ORDER BY appointment_time DESC";
+        String sql = "SELECT * FROM appointments WHERE user_id = ? ORDER BY appointment_id ASC";
         try (Connection conn = DbUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setLong(1, userId);

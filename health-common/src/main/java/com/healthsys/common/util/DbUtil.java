@@ -20,13 +20,10 @@ public class DbUtil {
                     props.setProperty("db.url", url);
                 }
             } else {
-                // 配置文件不存在时使用默认值（开发环境）
-                props.setProperty("db.url", "jdbc:mysql://localhost:3306/healthsys?useSSL=false&serverTimezone=UTC&useUnicode=true&characterEncoding=UTF-8&characterSetResults=UTF-8");
-                props.setProperty("db.user", "root");
-                props.setProperty("db.password", "");
+                throw new RuntimeException("数据库配置文件 db.properties 未找到，请确保文件存在于 classpath 中");
             }
         } catch (IOException e) {
-            System.err.println("无法加载数据库配置文件: " + e.getMessage());
+            throw new RuntimeException("无法加载数据库配置文件: " + e.getMessage(), e);
         }
     }
 

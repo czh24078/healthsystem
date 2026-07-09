@@ -6,6 +6,7 @@ import com.healthsys.dao.DoctorDAO;
 import com.healthsys.common.entity.Users;
 import com.healthsys.common.entity.Admin;
 import com.healthsys.common.entity.Doctor;
+import com.healthsys.common.util.PasswordUtil;
 
 public class AuthService {
     public interface LoginListener {
@@ -33,7 +34,19 @@ public class AuthService {
         UserDAO userDAO = new UserDAO();
         Users user = userDAO.getUserByPhone(phone);
         if (user == null) { fail("手机号未注册"); return; }
-        if (!password.equals(user.getPasswordHash())) { fail("密码错误"); return; }
+
+        String stored = user.getPasswordHash();
+        if (!PasswordUtil.verify(password, stored)) {
+            // 兼容旧明文密码
+            if (password.equals(stored)) {
+                userDAO.updateUserPasswordHash(user.getId(), PasswordUtil.hash(password));
+            } else {
+                fail("密码错误"); return;
+            }
+        } else if (!PasswordUtil.isBcryptHash(stored)) {
+            // 明文密码验证通过，迁移到 BCrypt
+            userDAO.updateUserPasswordHash(user.getId(), PasswordUtil.hash(password));
+        }
 
         if (user.isFirstLogin()) {
             if (loginListener != null) loginListener.onFirstLogin(user);
@@ -50,7 +63,17 @@ public class AuthService {
         AdminDAO dao = new AdminDAO();
         Admin admin = dao.getByUsername(username);
         if (admin == null) { fail("管理员账号不存在"); return; }
-        if (!password.equals(admin.getPasswordHash())) { fail("管理员密码错误"); return; }
+
+        String stored = admin.getPasswordHash();
+        if (!PasswordUtil.verify(password, stored)) {
+            if (password.equals(stored)) {
+                dao.updatePasswordHash(admin.getAdminId(), PasswordUtil.hash(password));
+            } else {
+                fail("管理员密码错误"); return;
+            }
+        } else if (!PasswordUtil.isBcryptHash(stored)) {
+            dao.updatePasswordHash(admin.getAdminId(), PasswordUtil.hash(password));
+        }
 
         Users u = toVirtualUser(admin.getAdminId(), admin.getRealName(), admin.getPhone(), "ADMIN");
         if (loginListener != null) loginListener.onLoginSuccess(u);
@@ -64,7 +87,17 @@ public class AuthService {
         DoctorDAO dao = new DoctorDAO();
         Doctor doctor = dao.getByUsername(username);
         if (doctor == null) { fail("医生账号不存在"); return; }
-        if (!password.equals(doctor.getPasswordHash())) { fail("医生密码错误"); return; }
+
+        String stored = doctor.getPasswordHash();
+        if (!PasswordUtil.verify(password, stored)) {
+            if (password.equals(stored)) {
+                dao.updatePasswordHash(doctor.getDoctorId(), PasswordUtil.hash(password));
+            } else {
+                fail("医生密码错误"); return;
+            }
+        } else if (!PasswordUtil.isBcryptHash(stored)) {
+            dao.updatePasswordHash(doctor.getDoctorId(), PasswordUtil.hash(password));
+        }
 
         Users u = toVirtualUser(doctor.getDoctorId(), doctor.getName(), null, "DOCTOR");
         if (loginListener != null) loginListener.onLoginSuccess(u);
@@ -86,7 +119,7 @@ public class AuthService {
             return;
         }
         UserDAO userDAO = new UserDAO();
-        if (userDAO.updateUserPassword(user.getId(), newPassword)) {
+        if (userDAO.updateUserPasswordHash(user.getId(), PasswordUtil.hash(newPassword))) {
             if (loginListener != null) loginListener.onPasswordChangeSuccess(user);
         } else {
             if (loginListener != null) loginListener.onPasswordChangeFailed("密码修改失败");

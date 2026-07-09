@@ -120,6 +120,16 @@ public class UserDAO {
         return add(user);
     }
 
+    public boolean updateUserPasswordHash(Long userId, String passwordHash) {
+        String sql = "UPDATE users SET password_hash = ? WHERE user_id = ?";
+        try (Connection conn = DbUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, passwordHash);
+            stmt.setLong(2, userId);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) { e.printStackTrace(); return false; }
+    }
+
     public boolean updateUserPassword(Long userId, String newPassword) {
         String sql = "UPDATE users SET password_hash = ?, first_login = FALSE WHERE user_id = ?";
         try (Connection conn = DbUtil.getConnection();
