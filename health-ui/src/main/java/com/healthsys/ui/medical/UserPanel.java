@@ -123,10 +123,10 @@ public class UserPanel extends CrudPanel<Users> {
         table.setFont(new Font("微软雅黑", Font.PLAIN, 13));
         table.getTableHeader().setFont(new Font("微软雅黑", Font.BOLD, 14));
         table.setRowHeight(30);
-        table.setShowGrid(false);
-        table.setIntercellSpacing(new Dimension(0, 0));
-        table.setSelectionBackground(new Color(220, 240, 255));
+        table.setSelectionBackground(new Color(220, 230, 250));
         table.setSelectionForeground(Color.BLACK);
+        table.setGridColor(new Color(220, 220, 220));
+        table.getTableHeader().setBackground(new Color(240, 240, 240));
 
         // 隔行变色
         table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
@@ -143,7 +143,7 @@ public class UserPanel extends CrudPanel<Users> {
         });
 
         // 列宽自动调整
-        table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
 
         JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.setBorder(BorderFactory.createEmptyBorder());

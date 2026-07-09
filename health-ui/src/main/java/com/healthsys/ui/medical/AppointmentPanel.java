@@ -1,9 +1,7 @@
 package com.healthsys.ui.medical;
 
 import com.healthsys.common.entity.Appointment;
-import com.healthsys.common.entity.Report;
 import com.healthsys.dao.AppointmentDAO;
-import com.healthsys.dao.ReportDAO;
 import com.toedter.calendar.JDateChooser;
 
 import javax.swing.*;
@@ -134,26 +132,6 @@ public class AppointmentPanel extends CrudPanel<Appointment> {
         });
         buttonPanel.add(startExamBtn, 0);
 
-        // 上传报告按钮 — 仅对已完成预约可用
-        JButton uploadReportBtn = CrudPanel.createStyledButton("上传报告", new Color(153, 204, 255));
-        uploadReportBtn.addActionListener(e -> {
-            Appointment selected = getSelectedAppointment();
-            if (selected == null) {
-                JOptionPane.showMessageDialog(this, "请先选择预约", "提示", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-            if (!"COMPLETED".equals(selected.getStatus())) {
-                JOptionPane.showMessageDialog(this, "请先完成检查后再上传报告", "提示", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-            Report existing = new ReportDAO().getByAppointmentId(selected.getId());
-            ReportEditDialog dialog = new ReportEditDialog(doctorId, selected.getId(), existing);
-            if (dialog.showDialog() == ReportEditDialog.OK_OPTION) {
-                refreshData();
-            }
-        });
-        buttonPanel.add(uploadReportBtn);
-
         // 查看结果按钮 — 显示已有检查结果
         JButton viewResultBtn = CrudPanel.createStyledButton("查看结果", new Color(255, 204, 153));
         viewResultBtn.addActionListener(e -> {
@@ -207,10 +185,10 @@ public class AppointmentPanel extends CrudPanel<Appointment> {
         table.setFont(new Font("微软雅黑", Font.PLAIN, 13));
         table.getTableHeader().setFont(new Font("微软雅黑", Font.BOLD, 14));
         table.setRowHeight(30);
-        table.setShowGrid(false);
-        table.setIntercellSpacing(new Dimension(0, 0));
-        table.setSelectionBackground(new Color(220, 240, 255));
+        table.setSelectionBackground(new Color(220, 230, 250));
         table.setSelectionForeground(Color.BLACK);
+        table.setGridColor(new Color(220, 220, 220));
+        table.getTableHeader().setBackground(new Color(240, 240, 240));
 
         table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
             @Override
@@ -225,7 +203,7 @@ public class AppointmentPanel extends CrudPanel<Appointment> {
             }
         });
 
-        table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
 
         JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
