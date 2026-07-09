@@ -66,6 +66,7 @@ CREATE TABLE IF NOT EXISTS check_groups (
     price DECIMAL(10,2) NOT NULL COMMENT '检查组总价',
     daily_limit INT DEFAULT 50 COMMENT '每日可预约名额上限',
     status TINYINT DEFAULT 1 COMMENT '状态: 1-上架 0-下架',
+    UNIQUE KEY uk_group_name (group_name) COMMENT '检查组名称唯一',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='检查组表';
