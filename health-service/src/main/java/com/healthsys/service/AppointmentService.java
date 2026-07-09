@@ -84,10 +84,6 @@ public class AppointmentService {
         return checkItemGroupDAO.getAll();
     }
 
-    public boolean createCustomGroup(CheckItemGroup group, List<Long> itemIds) {
-        return checkItemGroupDAO.createGroup(group, itemIds);
-    }
-
     public List<Appointment> getUserAppointmentsByStatus(long userId, String status) {
         return appointmentDAO.getUserAppointments(userId).stream()
                 .filter(a -> status.equals(a.getStatus()))
@@ -141,7 +137,6 @@ public class AppointmentService {
 
     // 兼容旧方法名
     public List<CheckItemGroup> getAllPackages() { return getAllGroups(); }
-    public boolean createCustomPackage(CheckItemGroup group, List<Long> itemIds) { return createCustomGroup(group, itemIds); }
     public CheckItemGroup getTestPackageById(Long id) { return getCheckItemGroupById(id); }
     public CheckItem getMedicalTestById(Long id) { return getCheckItemById(id); }
 

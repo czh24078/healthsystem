@@ -213,11 +213,13 @@ public class AppointmentDAO {
     public List<Appointment> searchByFilters(Long doctorId, java.time.LocalDate dateFrom, java.time.LocalDate dateTo, String status) {
         List<Appointment> appointments = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
-                "SELECT a.*, u.real_name as user_name, cg.group_name as group_name, d.name as doctor_name " +
+                "SELECT a.*, u.real_name as user_name, cg.group_name as group_name, d.name as doctor_name, " +
+                "(r.report_id IS NOT NULL) as has_report " +
                 "FROM appointments a " +
                 "LEFT JOIN users u ON a.user_id = u.user_id " +
                 "LEFT JOIN check_groups cg ON a.group_id = cg.group_id " +
                 "LEFT JOIN doctors d ON a.doctor_id = d.doctor_id " +
+                "LEFT JOIN reports r ON a.appointment_id = r.appointment_id " +
                 "WHERE 1=1");
         List<Object> params = new ArrayList<>();
 
@@ -275,6 +277,8 @@ public class AppointmentDAO {
         try { app.setUserName(rs.getString("user_name")); } catch (SQLException ignored) {}
         try { app.setGroupName(rs.getString("group_name")); } catch (SQLException ignored) {}
         try { app.setDoctorName(rs.getString("doctor_name")); } catch (SQLException ignored) {}
+        boolean hr = rs.getBoolean("has_report");
+        if (!rs.wasNull()) app.setHasReport(hr);
         return app;
     }
 }

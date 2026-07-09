@@ -31,7 +31,7 @@ public class MessagesView {
 
         // 标题面板
         JPanel titlePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JLabel titleLabel = new JLabel("检查组信息");
+        JLabel titleLabel = new JLabel("预约检查");
         titleLabel.setFont(new Font("微软雅黑", Font.BOLD, 18));
         titlePanel.add(titleLabel);
 
