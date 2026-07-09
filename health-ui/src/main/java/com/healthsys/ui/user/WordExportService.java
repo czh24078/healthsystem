@@ -24,18 +24,12 @@ public class WordExportService {
 
     /**
      * 导出预约报告到 Word 文档
-     *
-     * @param filePath 保存路径
-     * @param appointment 预约信息
-     * @param group      检查组（套餐）
-     * @param items      检查项目列表
      */
     public void exportAppointmentReport(String filePath, Appointment appointment,
                                         CheckItemGroup group, List<CheckItem> items) throws IOException {
         try (XWPFDocument doc = new XWPFDocument();
              FileOutputStream out = new FileOutputStream(filePath)) {
 
-            // ===== 标题 =====
             XWPFParagraph titlePara = doc.createParagraph();
             titlePara.setAlignment(ParagraphAlignment.CENTER);
             XWPFRun titleRun = titlePara.createRun();
@@ -44,7 +38,6 @@ public class WordExportService {
             titleRun.setFontSize(18);
             titleRun.setFontFamily("宋体");
 
-            // 打印时间
             XWPFParagraph timePara = doc.createParagraph();
             timePara.setAlignment(ParagraphAlignment.CENTER);
             XWPFRun timeRun = timePara.createRun();
@@ -54,11 +47,8 @@ public class WordExportService {
             timeRun.setColor("808080");
 
             addEmptyLine(doc);
-
-            // ===== 分隔线 =====
             addSeparator(doc);
 
-            // ===== 预约信息 =====
             addSectionTitle(doc, "【预约信息】");
 
             XWPFTable infoTable = doc.createTable(5, 2);
@@ -77,14 +67,12 @@ public class WordExportService {
 
             addEmptyLine(doc);
 
-            // ===== 检查项目明细 =====
             addSectionTitle(doc, "【检查项目明细】");
 
             XWPFTable itemsTable = doc.createTable(items.size() + 1, 5);
             itemsTable.setWidth("100%");
             setTableWidth(itemsTable, "8%", "32%", "22%", "26%", "12%");
 
-            // 表头
             String[] headers = {"序号", "项目名称", "科室/分类", "参考值范围", "单价"};
             XWPFTableRow headerRow = itemsTable.getRow(0);
             for (int i = 0; i < headers.length; i++) {
@@ -94,7 +82,6 @@ public class WordExportService {
                 setCellTextColor(cell, "FFFFFF");
             }
 
-            // 数据行
             double totalPrice = 0.0;
             for (int i = 0; i < items.size(); i++) {
                 CheckItem item = items.get(i);
@@ -111,7 +98,6 @@ public class WordExportService {
 
             addEmptyLine(doc);
 
-            // ===== 费用汇总 =====
             addSeparator(doc);
             XWPFParagraph summaryTitle = doc.createParagraph();
             XWPFRun summaryTitleRun = summaryTitle.createRun();
@@ -148,7 +134,6 @@ public class WordExportService {
         try (XWPFDocument doc = new XWPFDocument();
              FileOutputStream out = new FileOutputStream(filePath)) {
 
-            // ===== 标题 =====
             XWPFParagraph titlePara = doc.createParagraph();
             titlePara.setAlignment(ParagraphAlignment.CENTER);
             XWPFRun titleRun = titlePara.createRun();
@@ -169,7 +154,6 @@ public class WordExportService {
             addSeparator(doc);
             addEmptyLine(doc);
 
-            // ===== 用户信息 =====
             addSectionTitle(doc, "【用户信息】");
             XWPFTable userTable = doc.createTable(3, 2);
             fillInfoRow(userTable, 0, "姓名", user.getRealName() != null ? user.getRealName() : "");
@@ -179,7 +163,6 @@ public class WordExportService {
 
             addEmptyLine(doc);
 
-            // ===== 预约信息 =====
             addSectionTitle(doc, "【预约信息】");
             XWPFTable infoTable = doc.createTable(4, 2);
             fillInfoRow(infoTable, 0, "检查组", group != null ? group.getGroupName() : "未知");
@@ -194,7 +177,6 @@ public class WordExportService {
             addSeparator(doc);
             addEmptyLine(doc);
 
-            // ===== 检查结果 =====
             addSectionTitle(doc, "【检查结果】");
             if (records != null && !records.isEmpty()) {
                 XWPFTable resultsTable = doc.createTable(records.size() + 1, 6);
@@ -232,7 +214,6 @@ public class WordExportService {
 
                 addEmptyLine(doc);
 
-                // 异常项统计
                 long abnormalCount = records.stream()
                         .filter(r -> Boolean.TRUE.equals(r.getIsAbnormal())).count();
                 XWPFParagraph statPara = doc.createParagraph();
@@ -253,7 +234,6 @@ public class WordExportService {
             addSeparator(doc);
             addEmptyLine(doc);
 
-            // ===== 医生报告 =====
             addSectionTitle(doc, "【医生综合报告】");
             if (report != null && report.getSummary() != null && !report.getSummary().isEmpty()) {
                 XWPFParagraph reportPara = doc.createParagraph();
@@ -273,11 +253,143 @@ public class WordExportService {
             addEmptyLine(doc);
             addEmptyLine(doc);
 
-            // ===== 页脚 =====
             XWPFParagraph footer = doc.createParagraph();
             footer.setAlignment(ParagraphAlignment.CENTER);
             XWPFRun footerRun = footer.createRun();
             footerRun.setText("— 本报告由健康管理系统自动生成 —");
+            footerRun.setFontSize(10);
+            footerRun.setFontFamily("宋体");
+            footerRun.setColor("999999");
+
+            doc.write(out);
+        }
+    }
+
+    /**
+     * 导出含检查结果和诊断建议的报告文档
+     */
+    public void exportReportWithResults(String filePath, Appointment appointment,
+                                        CheckItemGroup group, List<CheckItem> items,
+                                        List<ExamRecord> examRecords, String reportSummary) throws IOException {
+        try (XWPFDocument doc = new XWPFDocument();
+             FileOutputStream out = new FileOutputStream(filePath)) {
+
+            XWPFParagraph titlePara = doc.createParagraph();
+            titlePara.setAlignment(ParagraphAlignment.CENTER);
+            XWPFRun titleRun = titlePara.createRun();
+            titleRun.setText("体检报告 — " + (appointment.getUserName() != null ? appointment.getUserName() : ""));
+            titleRun.setBold(true);
+            titleRun.setFontSize(18);
+            titleRun.setFontFamily("宋体");
+
+            XWPFParagraph timePara = doc.createParagraph();
+            timePara.setAlignment(ParagraphAlignment.CENTER);
+            XWPFRun timeRun = timePara.createRun();
+            timeRun.setText("导出时间：" + java.time.LocalDateTime.now().format(DATETIME_FMT));
+            timeRun.setFontSize(11);
+            timeRun.setFontFamily("宋体");
+            timeRun.setColor("808080");
+
+            addEmptyLine(doc);
+            addSeparator(doc);
+
+            addSectionTitle(doc, "【基本信息】");
+            XWPFTable infoTable = doc.createTable(4, 2);
+            fillInfoRow(infoTable, 0, "套餐名称", group != null ? group.getGroupName() : "");
+            fillInfoRow(infoTable, 1, "检查日期",
+                    appointment.getExamDate() != null ? appointment.getExamDate().format(DATE_FMT) : "");
+            fillInfoRow(infoTable, 2, "时段",
+                    appointment.getExamTimeSlot() != null ? appointment.getExamTimeSlot() : "");
+            fillInfoRow(infoTable, 3, "负责医生",
+                    appointment.getDoctorName() != null ? appointment.getDoctorName() : "");
+
+            addEmptyLine(doc);
+            addSeparator(doc);
+
+            addSectionTitle(doc, "【检查结果】");
+            if (examRecords != null && !examRecords.isEmpty()) {
+                XWPFTable resultTable = doc.createTable(examRecords.size() + 1, 4);
+                String[] headers = {"检查项", "结果值", "参考范围", "异常"};
+                XWPFTableRow headerRow = resultTable.getRow(0);
+                for (int i = 0; i < headers.length; i++) {
+                    XWPFTableCell cell = headerRow.getCell(i);
+                    setCellText(cell, headers[i], true);
+                    setCellBackground(cell, "4D88C5");
+                    setCellTextColor(cell, "FFFFFF");
+                }
+
+                for (int i = 0; i < examRecords.size(); i++) {
+                    ExamRecord r = examRecords.get(i);
+                    XWPFTableRow row = resultTable.getRow(i + 1);
+
+                    String itemName = r.getItemName();
+                    if (itemName == null) {
+                        for (CheckItem ci : items) {
+                            if (ci.getItemId().equals(r.getItemId())) {
+                                itemName = ci.getItemName();
+                                break;
+                            }
+                        }
+                    }
+
+                    String refRange = "";
+                    for (CheckItem ci : items) {
+                        if (ci.getItemId().equals(r.getItemId()) && ci.getReferenceRange() != null) {
+                            refRange = ci.getReferenceRange();
+                            break;
+                        }
+                    }
+
+                    setCellText(row.getCell(0), itemName != null ? itemName : "项目#" + r.getItemId(), false);
+                    setCellText(row.getCell(1), r.getResultValue() != null ? r.getResultValue() : "-", false);
+                    setCellText(row.getCell(2), refRange, false);
+
+                    boolean abnormal = r.getIsAbnormal() != null && r.getIsAbnormal();
+                    setCellText(row.getCell(3), abnormal ? "异常" : "正常", false);
+                    if (abnormal) setCellTextColor(row.getCell(3), "CC0000");
+
+                    if (r.getDoctorNote() != null && !r.getDoctorNote().isEmpty()) {
+                        setCellText(row.getCell(1),
+                                (r.getResultValue() != null ? r.getResultValue() : "-") + "\n(" + r.getDoctorNote() + ")",
+                                false);
+                    }
+                }
+            } else {
+                XWPFParagraph emptyPara = doc.createParagraph();
+                XWPFRun emptyRun = emptyPara.createRun();
+                emptyRun.setText("暂无检查结果");
+                emptyRun.setColor("999999");
+                emptyRun.setFontSize(12);
+                emptyRun.setFontFamily("宋体");
+            }
+
+            addEmptyLine(doc);
+            addSeparator(doc);
+
+            addSectionTitle(doc, "【诊断建议】");
+            if (reportSummary != null && !reportSummary.isEmpty()) {
+                for (String line : reportSummary.split("\n")) {
+                    XWPFParagraph para = doc.createParagraph();
+                    XWPFRun run = para.createRun();
+                    run.setText(line);
+                    run.setFontSize(12);
+                    run.setFontFamily("宋体");
+                }
+            } else {
+                XWPFParagraph emptyPara = doc.createParagraph();
+                XWPFRun emptyRun = emptyPara.createRun();
+                emptyRun.setText("暂无诊断建议");
+                emptyRun.setColor("999999");
+                emptyRun.setFontSize(12);
+                emptyRun.setFontFamily("宋体");
+            }
+
+            addEmptyLine(doc);
+            addSeparator(doc);
+            XWPFParagraph footer = doc.createParagraph();
+            footer.setAlignment(ParagraphAlignment.CENTER);
+            XWPFRun footerRun = footer.createRun();
+            footerRun.setText("— 报告结束 —");
             footerRun.setFontSize(10);
             footerRun.setFontFamily("宋体");
             footerRun.setColor("999999");
@@ -296,7 +408,6 @@ public class WordExportService {
         try (XWPFDocument doc = new XWPFDocument();
              FileOutputStream out = new FileOutputStream(filePath)) {
 
-            // ===== 总标题 =====
             XWPFParagraph titlePara = doc.createParagraph();
             titlePara.setAlignment(ParagraphAlignment.CENTER);
             XWPFRun titleRun = titlePara.createRun();
@@ -322,7 +433,6 @@ public class WordExportService {
 
             addEmptyLine(doc);
 
-            // 总费用汇总
             double grandTotal = 0.0;
             for (int i = 0; i < groups.size(); i++) {
                 if (groups.get(i) != null) {
@@ -342,13 +452,11 @@ public class WordExportService {
             addSeparator(doc);
             addEmptyLine(doc);
 
-            // 逐条输出
             for (int idx = 0; idx < appointments.size(); idx++) {
                 Appointment app = appointments.get(idx);
                 CheckItemGroup group = groups.get(idx);
                 List<CheckItem> items = allItems.get(idx);
 
-                // 序号标题
                 XWPFParagraph idxPara = doc.createParagraph();
                 XWPFRun idxRun = idxPara.createRun();
                 idxRun.setText("第 " + (idx + 1) + " 条 — " + (group != null ? group.getGroupName() : "未知套餐"));
@@ -358,7 +466,6 @@ public class WordExportService {
 
                 addEmptyLine(doc);
 
-                // 预约信息
                 addSectionTitle(doc, "【预约信息】");
                 XWPFTable infoTable = doc.createTable(5, 2);
                 fillInfoRow(infoTable, 0, "套餐名称", group != null ? group.getGroupName() : "未知");
@@ -372,7 +479,6 @@ public class WordExportService {
 
                 addEmptyLine(doc);
 
-                // 检查项目明细
                 addSectionTitle(doc, "【检查项目明细】");
                 if (items != null && !items.isEmpty()) {
                     XWPFTable itemsTable = doc.createTable(items.size() + 1, 5);
@@ -414,7 +520,6 @@ public class WordExportService {
                     emptyRun.setColor("999999");
                 }
 
-                // 分页（最后一条不加）
                 if (idx < appointments.size() - 1) {
                     XWPFParagraph breakPara = doc.createParagraph();
                     breakPara.setPageBreak(true);
@@ -447,7 +552,6 @@ public class WordExportService {
     }
 
     private void setTableWidth(XWPFTable table, String... widths) {
-        // POI 简单设置列宽
     }
 
     private void fillInfoRow(XWPFTable table, int rowIdx, String label, String value) {
@@ -477,7 +581,6 @@ public class WordExportService {
     }
 
     private void setCellTextColor(XWPFTableCell cell, String hexColor) {
-        // 通过 run 设置颜色
         if (!cell.getParagraphs().isEmpty()) {
             XWPFParagraph para = cell.getParagraphs().get(0);
             if (!para.getRuns().isEmpty()) {
