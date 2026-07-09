@@ -5,6 +5,7 @@ import com.healthsys.common.entity.CheckItem;
 import com.healthsys.common.entity.CheckItemGroup;
 import com.healthsys.common.entity.ExamRecord;
 import com.healthsys.common.entity.Report;
+import com.healthsys.ui.HealthTheme;
 
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
@@ -22,9 +23,6 @@ import java.util.Map;
  */
 public class AppointmentDetailDialog extends JDialog {
 
-    private static final Color MAIN_COLOR = new Color(70, 104, 197);
-    private static final Color ABNORMAL_COLOR = new Color(198, 40, 40);
-    private static final Color NORMAL_COLOR = new Color(46, 125, 50);
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private static final DateTimeFormatter DATETIME_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
@@ -42,15 +40,19 @@ public class AppointmentDetailDialog extends JDialog {
         // ===== 顶部：报告摘要（仅已处理且有报告时显示）=====
         if (report != null && report.getSummary() != null && !report.getSummary().isEmpty()) {
             JPanel reportPanel = new JPanel(new BorderLayout());
-            reportPanel.setBorder(BorderFactory.createTitledBorder("医生综合报告"));
+            reportPanel.setBorder(BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(HealthTheme.BORDER, 1, true),
+                "医生综合报告"
+            ));
             reportPanel.setBackground(Color.WHITE);
 
             JTextArea reportArea = new JTextArea(report.getSummary());
-            reportArea.setFont(new Font("微软雅黑", Font.PLAIN, 13));
+            reportArea.setFont(HealthTheme.FONT_BODY_SM);
             reportArea.setEditable(false);
             reportArea.setLineWrap(true);
             reportArea.setWrapStyleWord(true);
-            reportArea.setBackground(new Color(252, 252, 252));
+            reportArea.setBackground(HealthTheme.BG_SECONDARY);
+            reportArea.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
             JScrollPane reportScroll = new JScrollPane(reportArea);
             reportScroll.setPreferredSize(new Dimension(800, 120));
             reportPanel.add(reportScroll, BorderLayout.CENTER);
@@ -59,7 +61,7 @@ public class AppointmentDetailDialog extends JDialog {
 
         // ===== 中部：JTabbedPane（套餐项目 + 检查结果）=====
         JTabbedPane tabbedPane = new JTabbedPane();
-        tabbedPane.setFont(new Font("微软雅黑", Font.PLAIN, 14));
+        tabbedPane.setFont(HealthTheme.FONT_BUTTON);
 
         // 标签1：预约基本信息 + 套餐项目
         JPanel packageTab = createPackageTab(appointment, group, items);
@@ -84,16 +86,19 @@ public class AppointmentDetailDialog extends JDialog {
         JLabel totalLabel = new JLabel(String.format("费用合计：%d 项  |  套餐总价：¥%.2f",
                 items.size(), group != null ? group.getPrice() : totalPrice));
         totalLabel.setFont(new Font("微软雅黑", Font.BOLD, 16));
-        totalLabel.setForeground(new Color(180, 40, 40));
+        totalLabel.setForeground(HealthTheme.DANGER);
         totalLabel.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
         southPanel.add(totalLabel, BorderLayout.WEST);
 
         JButton closeButton = new JButton("关闭");
-        closeButton.setFont(new Font("微软雅黑", Font.PLAIN, 14));
-        closeButton.setBackground(MAIN_COLOR);
-        closeButton.setForeground(Color.BLACK);
+        closeButton.setFont(HealthTheme.FONT_BUTTON);
+        closeButton.setBackground(HealthTheme.BTN_PRIMARY);
+        closeButton.setForeground(Color.WHITE);
         closeButton.setFocusPainted(false);
-        closeButton.setPreferredSize(new Dimension(100, 35));
+        closeButton.setBorderPainted(false);
+        closeButton.setOpaque(true);
+        closeButton.setPreferredSize(new Dimension(100, 38));
+        closeButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
         closeButton.addActionListener(e -> dispose());
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -136,15 +141,32 @@ public class AppointmentDetailDialog extends JDialog {
 
         // 检查项目明细表
         JTable itemsTable = new JTable(new CheckItemTableModel(items));
-        itemsTable.setFont(new Font("微软雅黑", Font.PLAIN, 13));
-        itemsTable.getTableHeader().setFont(new Font("微软雅黑", Font.BOLD, 13));
-        itemsTable.setRowHeight(28);
-        itemsTable.getColumnModel().getColumn(0).setMaxWidth(50);
-        itemsTable.getColumnModel().getColumn(4).setMaxWidth(80);
+        itemsTable.setFont(HealthTheme.FONT_BODY_SM);
+        itemsTable.getTableHeader().setFont(HealthTheme.FONT_BUTTON);
+        itemsTable.getTableHeader().setBackground(HealthTheme.TABLE_HEADER);
+        itemsTable.getTableHeader().setForeground(Color.WHITE);
+        itemsTable.setRowHeight(36);
+        itemsTable.setSelectionBackground(HealthTheme.TABLE_SELECTED);
+        itemsTable.setGridColor(HealthTheme.BORDER);
+        itemsTable.setShowHorizontalLines(true);
+        itemsTable.setShowVerticalLines(false);
+        itemsTable.setIntercellSpacing(new Dimension(0, 0));
+        itemsTable.getColumnModel().getColumn(0).setMaxWidth(60);
+        itemsTable.getColumnModel().getColumn(4).setMaxWidth(100);
+        
+        // 自定义表头渲染器
+        DefaultTableCellRenderer headerRenderer = new DefaultTableCellRenderer();
+        headerRenderer.setBackground(HealthTheme.TABLE_HEADER);
+        headerRenderer.setForeground(Color.WHITE);
+        headerRenderer.setFont(HealthTheme.FONT_BUTTON);
+        headerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+        itemsTable.getTableHeader().setDefaultRenderer(headerRenderer);
 
         JScrollPane scrollPane = new JScrollPane(itemsTable);
         scrollPane.setBorder(BorderFactory.createTitledBorder(
-                "检查项目明细（共 " + items.size() + " 项）"));
+            BorderFactory.createLineBorder(HealthTheme.BORDER, 1, true),
+            "检查项目明细（共 " + items.size() + " 项）"
+        ));
 
         panel.add(scrollPane, BorderLayout.CENTER);
         return panel;
@@ -165,19 +187,36 @@ public class AppointmentDetailDialog extends JDialog {
 
         // 结果表格
         JTable resultsTable = new JTable(new ExamResultTableModel(examRecords, itemMap));
-        resultsTable.setFont(new Font("微软雅黑", Font.PLAIN, 13));
-        resultsTable.getTableHeader().setFont(new Font("微软雅黑", Font.BOLD, 13));
-        resultsTable.setRowHeight(28);
-        resultsTable.getColumnModel().getColumn(0).setMaxWidth(50);   // 序号
-        resultsTable.getColumnModel().getColumn(4).setMaxWidth(160);  // 参考范围
-        resultsTable.getColumnModel().getColumn(5).setMaxWidth(60);   // 异常
+        resultsTable.setFont(HealthTheme.FONT_BODY_SM);
+        resultsTable.getTableHeader().setFont(HealthTheme.FONT_BUTTON);
+        resultsTable.getTableHeader().setBackground(HealthTheme.TABLE_HEADER);
+        resultsTable.getTableHeader().setForeground(Color.WHITE);
+        resultsTable.setRowHeight(36);
+        resultsTable.setSelectionBackground(HealthTheme.TABLE_SELECTED);
+        resultsTable.setGridColor(HealthTheme.BORDER);
+        resultsTable.setShowHorizontalLines(true);
+        resultsTable.setShowVerticalLines(false);
+        resultsTable.setIntercellSpacing(new Dimension(0, 0));
+        resultsTable.getColumnModel().getColumn(0).setMaxWidth(60);   // 序号
+        resultsTable.getColumnModel().getColumn(4).setMaxWidth(180);  // 参考范围
+        resultsTable.getColumnModel().getColumn(5).setMaxWidth(80);   // 异常
+        
+        // 自定义表头渲染器
+        DefaultTableCellRenderer headerRenderer = new DefaultTableCellRenderer();
+        headerRenderer.setBackground(HealthTheme.TABLE_HEADER);
+        headerRenderer.setForeground(Color.WHITE);
+        headerRenderer.setFont(HealthTheme.FONT_BUTTON);
+        headerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+        resultsTable.getTableHeader().setDefaultRenderer(headerRenderer);
 
         // 异常列颜色渲染
         resultsTable.getColumnModel().getColumn(5).setCellRenderer(new AbnormalCellRenderer());
 
         JScrollPane scrollPane = new JScrollPane(resultsTable);
         scrollPane.setBorder(BorderFactory.createTitledBorder(
-                "检查结果（共 " + examRecords.size() + " 项）"));
+            BorderFactory.createLineBorder(HealthTheme.BORDER, 1, true),
+            "检查结果（共 " + examRecords.size() + " 项）"
+        ));
 
         panel.add(scrollPane, BorderLayout.CENTER);
         return panel;
@@ -185,10 +224,12 @@ public class AppointmentDetailDialog extends JDialog {
 
     private void addInfoRow(JPanel panel, String label, String value) {
         JLabel lb = new JLabel(label);
-        lb.setFont(new Font("微软雅黑", Font.BOLD, 14));
+        lb.setFont(HealthTheme.FONT_BODY_SM);
+        lb.setForeground(HealthTheme.TEXT_SECONDARY);
         panel.add(lb);
         JLabel vl = new JLabel(value);
         vl.setFont(new Font("微软雅黑", Font.PLAIN, 14));
+        vl.setForeground(HealthTheme.TEXT_PRIMARY);
         panel.add(vl);
     }
 
@@ -257,7 +298,7 @@ public class AppointmentDetailDialog extends JDialog {
     }
 
     /**
-     * 异常列渲染器 — 异常红色，正常绿色
+     * 异常列渲染器 — 简洁样式,无颜色区分
      */
     private static class AbnormalCellRenderer extends DefaultTableCellRenderer {
         @Override
@@ -266,14 +307,16 @@ public class AppointmentDetailDialog extends JDialog {
             JLabel lbl = (JLabel) super.getTableCellRendererComponent(
                     table, value, isSelected, hasFocus, row, col);
             lbl.setHorizontalAlignment(SwingConstants.CENTER);
-            lbl.setFont(new Font("微软雅黑", Font.BOLD, 12));
-            if (!isSelected) {
-                if ("异常".equals(value)) {
-                    lbl.setForeground(ABNORMAL_COLOR);
-                } else {
-                    lbl.setForeground(NORMAL_COLOR);
-                }
+            lbl.setFont(HealthTheme.FONT_BODY_SM);
+            
+            if (isSelected) {
+                lbl.setForeground(table.getSelectionForeground());
+                setBackground(table.getSelectionBackground());
+            } else {
+                lbl.setForeground(table.getForeground());
+                setBackground(table.getBackground());
             }
+            lbl.setOpaque(true);
             return lbl;
         }
     }

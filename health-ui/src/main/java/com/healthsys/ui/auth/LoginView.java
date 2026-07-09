@@ -2,6 +2,7 @@ package com.healthsys.ui.auth;
 
 import com.healthsys.service.AuthService;
 import com.healthsys.common.entity.Users;
+import com.healthsys.ui.HealthTheme;
 import com.healthsys.ui.admin.AdminMainView;
 import javax.swing.*;
 import java.awt.*;
@@ -12,11 +13,11 @@ public class LoginView extends JFrame {
     private static final String APP_NAME = "健康检查系统";
     private static final String PREFS_KEY = "health_system_prefs";
     private static final int WINDOW_WIDTH = 500;
-    private static final int WINDOW_HEIGHT = 400;
+    private static final int WINDOW_HEIGHT = 420;
     private static final Color BACKGROUND_COLOR = Color.WHITE;
-    private static final Font TITLE_FONT = new Font("Microsoft YaHei", Font.BOLD, 24);
-    private static final Font LABEL_FONT = new Font("Microsoft YaHei", Font.PLAIN, 14);
-    private static final Font BUTTON_FONT = new Font("Microsoft YaHei", Font.BOLD, 14);
+    private static final Font TITLE_FONT = HealthTheme.FONT_TITLE;
+    private static final Font LABEL_FONT = HealthTheme.FONT_BODY_SM;
+    private static final Font BUTTON_FONT = HealthTheme.FONT_BUTTON;
     private static final int COMPONENT_PADDING = 30;
     private static final int FIELD_GAP = 10;
     private static final int ROW_GAP = 15;
@@ -62,6 +63,7 @@ public class LoginView extends JFrame {
 
         JLabel titleLabel = new JLabel(APP_NAME, JLabel.CENTER);
         titleLabel.setFont(TITLE_FONT);
+        titleLabel.setForeground(HealthTheme.PRIMARY); // 医疗蓝标题
         titlePanel.add(titleLabel);
 
         return titlePanel;
@@ -101,10 +103,16 @@ public class LoginView extends JFrame {
 
         JLabel jLabel = new JLabel(label);
         jLabel.setFont(LABEL_FONT);
+        jLabel.setForeground(HealthTheme.TEXT_PRIMARY);
         jLabel.setPreferredSize(new Dimension(60, 25));
 
         field.setFont(LABEL_FONT);
         field.setPreferredSize(new Dimension(200, 30));
+        field.setBackground(Color.WHITE);
+        field.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(HealthTheme.BORDER),
+            BorderFactory.createEmptyBorder(5, 8, 5, 8)
+        ));
 
         panel.add(jLabel);
         panel.add(field);
@@ -141,11 +149,11 @@ public class LoginView extends JFrame {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 0));
         panel.setOpaque(false);
 
-        loginButton = createButton("登录", Color.BLACK, e -> handleLogin());
+        loginButton = createButton("登录", HealthTheme.PRIMARY, e -> handleLogin());
         loginButton.setMnemonic(KeyEvent.VK_ENTER);
         getRootPane().setDefaultButton(loginButton);
 
-        registerButton = createButton("注册", Color.BLACK, e -> showRegistrationDialog());
+        registerButton = createButton("注册", HealthTheme.BTN_SECONDARY, e -> showRegistrationDialog());
 
         panel.add(loginButton);
         panel.add(registerButton);
@@ -157,9 +165,23 @@ public class LoginView extends JFrame {
         JButton button = new JButton(text);
         button.setFont(BUTTON_FONT);
         button.setBackground(bgColor);
-        button.setForeground(Color.BLACK);
+        button.setForeground(Color.WHITE); // 白色文字
         button.setFocusPainted(false);
-        button.setPreferredSize(new Dimension(120, 35));
+        button.setBorderPainted(false);
+        button.setOpaque(true);
+        button.setPreferredSize(new Dimension(120, 40));
+        button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        
+        // 悬停效果
+        button.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                button.setBackground(bgColor.darker());
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                button.setBackground(bgColor);
+            }
+        });
+        
         button.addActionListener(listener);
         return button;
     }

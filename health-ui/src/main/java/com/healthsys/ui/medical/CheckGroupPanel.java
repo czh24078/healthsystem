@@ -4,6 +4,7 @@ import com.healthsys.common.entity.CheckItem;
 import com.healthsys.common.entity.CheckItemGroup;
 import com.healthsys.dao.CheckItemDAO;
 import com.healthsys.dao.CheckItemGroupDAO;
+import com.healthsys.ui.HealthTheme;
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -33,10 +34,12 @@ public class CheckGroupPanel extends CrudPanel<CheckItemGroup> {
     private void setupSearchPanel() {
         getSearchPanel().add(new JLabel("检查组ID:"));
         idSearchField = new JTextField(8);
+        idSearchField.setFont(HealthTheme.FONT_BODY_SM);
         getSearchPanel().add(idSearchField);
 
         getSearchPanel().add(new JLabel("检查组名称:"));
         nameSearchField = new JTextField(15);
+        nameSearchField.setFont(HealthTheme.FONT_BODY_SM);
         getSearchPanel().add(nameSearchField);
 
         getSearchButton().addActionListener(e -> searchCheckGroups());
@@ -127,31 +130,28 @@ public class CheckGroupPanel extends CrudPanel<CheckItemGroup> {
     private void initializeTable() {
         tableModel = new CheckGroupTableModel();
         table = new JTable(tableModel);
-        table.setFont(new Font("微软雅黑", Font.PLAIN, 13));
-        table.getTableHeader().setFont(new Font("微软雅黑", Font.BOLD, 14));
-        table.setRowHeight(30);
-        table.setSelectionBackground(new Color(220, 230, 250));
-        table.setSelectionForeground(Color.BLACK);
-        table.setGridColor(new Color(220, 220, 220));
-        table.getTableHeader().setBackground(new Color(240, 240, 240));
+        
+        // 使用HealthTheme统一样式
+        table.setFont(HealthTheme.FONT_BODY_SM);
+        table.setRowHeight(36);
+        table.setShowGrid(false);
+        table.setIntercellSpacing(new Dimension(0, 0));
         table.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
 
-        // 隔行变色
-        table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
-            @Override
-            public Component getTableCellRendererComponent(JTable table, Object value,
-                                                           boolean isSelected, boolean hasFocus, int row, int col) {
-                Component c = super.getTableCellRendererComponent(table, value,
-                        isSelected, hasFocus, row, col);
-                if (!isSelected) {
-                    c.setBackground(row % 2 == 0 ? Color.WHITE : new Color(248, 248, 248));
-                }
-                setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 10));
-                return c;
-            }
-        });
+        // 自定义表头渲染器
+        DefaultTableCellRenderer headerRenderer = new DefaultTableCellRenderer();
+        headerRenderer.setBackground(HealthTheme.TABLE_HEADER);
+        headerRenderer.setForeground(Color.WHITE);
+        headerRenderer.setFont(HealthTheme.FONT_BUTTON);
+        headerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+        table.getTableHeader().setDefaultRenderer(headerRenderer);
 
-        // 状态列 — 彩色标签
+        // 数据列居中对齐
+        DefaultTableCellRenderer cellRenderer = new DefaultTableCellRenderer();
+        cellRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+        table.setDefaultRenderer(Object.class, cellRenderer);
+
+        // 状态列 — 居中显示,无彩色背景
         table.getColumnModel().getColumn(5).setCellRenderer(new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value,
@@ -160,16 +160,9 @@ public class CheckGroupPanel extends CrudPanel<CheckItemGroup> {
                         table, value, isSelected, hasFocus, row, col);
                 lbl.setHorizontalAlignment(SwingConstants.CENTER);
                 if (!isSelected) {
-                    if ("上架".equals(value)) {
-                        lbl.setBackground(SUCCESS_BG);
-                        lbl.setForeground(SUCCESS_FG);
-                    } else {
-                        lbl.setBackground(DANGER_BG);
-                        lbl.setForeground(DANGER_FG);
-                    }
+                    lbl.setForeground(HealthTheme.TEXT_PRIMARY);
                 }
-                lbl.setFont(new Font("微软雅黑", Font.BOLD, 12));
-                lbl.setBorder(BorderFactory.createEmptyBorder(2, 8, 2, 8));
+                lbl.setFont(HealthTheme.FONT_BODY_SM);
                 return lbl;
             }
         });
@@ -182,8 +175,8 @@ public class CheckGroupPanel extends CrudPanel<CheckItemGroup> {
                 JLabel lbl = (JLabel) super.getTableCellRendererComponent(
                         table, value, isSelected, hasFocus, row, col);
                 lbl.setHorizontalAlignment(SwingConstants.RIGHT);
-                lbl.setFont(new Font("微软雅黑", Font.BOLD, 13));
-                if (!isSelected) lbl.setForeground(new Color(46, 125, 50));
+                lbl.setFont(HealthTheme.FONT_BUTTON);
+                if (!isSelected) lbl.setForeground(HealthTheme.SUCCESS);
                 return lbl;
             }
         });

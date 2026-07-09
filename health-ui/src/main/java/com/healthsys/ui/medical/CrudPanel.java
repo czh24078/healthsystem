@@ -1,5 +1,7 @@
 package com.healthsys.ui.medical;
 
+import com.healthsys.ui.HealthTheme;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
@@ -17,24 +19,24 @@ public abstract class CrudPanel<T> extends JPanel {
 
     public CrudPanel() {
         setLayout(new BorderLayout());
-        setBackground(new Color(245, 245, 245)); // 统一背景色
+        setBackground(Color.WHITE);
         createToolbar();
         createContent();
     }
 
     private void createToolbar() {
         JPanel toolbar = new JPanel(new BorderLayout());
-        toolbar.setBackground(new Color(245, 245, 245));
-        toolbar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(220, 220, 220)));
+        toolbar.setBackground(Color.WHITE);
+        toolbar.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
 
         // 按钮面板
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
-        buttonPanel.setBackground(new Color(245, 245, 245));
+        buttonPanel.setBackground(Color.WHITE);
 
-        // 创建按钮 - 使用第一次代码的样式
-        addButton = createStyledButton("添加", new Color(102, 153, 204));
-        editButton = createStyledButton("编辑", new Color(153, 204, 255));
-        deleteButton = createStyledButton("删除", new Color(204, 153, 153));
+        // 创建按钮 - 使用HealthTheme统一样式
+        addButton = createStyledButton("添加", HealthTheme.BTN_PRIMARY);
+        editButton = createStyledButton("编辑", HealthTheme.BTN_SECONDARY);
+        deleteButton = createStyledButton("删除", HealthTheme.BTN_DANGER);
 
         buttonPanel.add(addButton);
         buttonPanel.add(editButton);
@@ -42,9 +44,9 @@ public abstract class CrudPanel<T> extends JPanel {
 
         // 搜索面板
         searchPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 5));
-        searchPanel.setBackground(new Color(245, 245, 245));
+        searchPanel.setBackground(Color.WHITE);
 
-        searchButton = createStyledButton("查询", new Color(153, 204, 153));
+        searchButton = createStyledButton("查询", HealthTheme.BTN_SUCCESS);
         searchPanel.add(searchButton);
 
         toolbar.add(buttonPanel, BorderLayout.WEST);
@@ -53,34 +55,39 @@ public abstract class CrudPanel<T> extends JPanel {
         add(toolbar, BorderLayout.NORTH);
     }
 
-    // 统一的按钮创建方法 - 与第一次代码风格一致
+    // 统一的按钮创建方法 - 使用HealthTheme
     public static JButton createStyledButton(String text, Color bgColor) {
         JButton button = new JButton(text);
-        button.setFont(new Font("微软雅黑", Font.BOLD, 14));
-        button.setForeground(Color.BLACK);
+        button.setFont(HealthTheme.FONT_BUTTON);
+        button.setForeground(Color.WHITE); // 白色文字
         button.setBackground(bgColor);
-        button.setBorder(BorderFactory.createCompoundBorder(
-                new LineBorder(bgColor.darker(), 1),
-                new EmptyBorder(5, 15, 5, 15)
-        ));
         button.setFocusPainted(false);
+        button.setBorderPainted(false);
+        button.setOpaque(true);
+        button.setPreferredSize(new Dimension(90, 36));
         button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
         button.addMouseListener(new MouseAdapter() {
             public void mouseEntered(MouseEvent evt) {
-                button.setBackground(bgColor.brighter());
+                button.setBackground(bgColor.darker()); // 悬停变深
             }
             public void mouseExited(MouseEvent evt) {
-                button.setBackground(bgColor);
+                button.setBackground(bgColor); // 恢复原色
             }
         });
 
         return button;
     }
+    
+    // 系统适配的按钮颜色常量
+    public static final Color BTN_WARNING_YELLOW = new Color(255, 193, 7);   // 黄色 - 待检查
+    public static final Color BTN_SUCCESS_GREEN = new Color(76, 175, 80);    // 绿色 - 已完成
+    public static final Color BTN_NEUTRAL_GRAY = new Color(158, 158, 158);   // 灰色 - 已取消
+    public static final Color BTN_INFO_BLUE = new Color(33, 150, 243);       // 蓝色 - 信息
 
     private void createContent() {
         contentPanel = new JPanel(new BorderLayout());
-        contentPanel.setBackground(new Color(245, 245, 245));
+        contentPanel.setBackground(Color.WHITE);
         add(contentPanel, BorderLayout.CENTER);
     }
 

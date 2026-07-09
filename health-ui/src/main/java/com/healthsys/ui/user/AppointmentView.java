@@ -1,4 +1,3 @@
-
 package com.healthsys.ui.user;
 
 import com.healthsys.service.AppointmentService;
@@ -12,9 +11,11 @@ import com.healthsys.common.entity.Users;
 import com.healthsys.common.entity.CheckItemGroup;
 import com.healthsys.common.entity.CheckItem;
 import com.healthsys.dao.ReportDAO;
+import com.healthsys.ui.HealthTheme;
 import com.toedter.calendar.JDateChooser;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.io.File;
@@ -42,63 +43,57 @@ public class AppointmentView {
     }
 
     private void initializeUI() {
-        appointmentPanel = new JPanel(new BorderLayout());
-        appointmentPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        appointmentPanel = new JPanel(new BorderLayout(0, 0));
+        appointmentPanel.setBackground(Color.WHITE);
+        appointmentPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        // 工具栏
-        JPanel toolbarPanel = new JPanel(new BorderLayout());
-        toolbarPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        // ===== 标题栏 =====
+        JPanel headerPanel = new JPanel(new BorderLayout(10, 0));
+        headerPanel.setBackground(Color.WHITE);
+        headerPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
 
-        // 左侧：刷新按钮
-        JPanel leftToolbar = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JButton refreshBtn = new JButton("刷新");
-        refreshBtn.setFont(new Font("微软雅黑", Font.PLAIN, 13));
-        refreshBtn.addActionListener(e -> refreshAppointmentData());
-        leftToolbar.add(refreshBtn);
-        toolbarPanel.add(leftToolbar, BorderLayout.WEST);
+        JPanel titlePanel = new JPanel();
+        titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.Y_AXIS));
+        titlePanel.setBackground(Color.WHITE);
 
-        // 右侧：打印报告和查看医生报告按钮
-        JPanel rightToolbar = new JPanel();
-        rightToolbar.setLayout(new BoxLayout(rightToolbar, BoxLayout.Y_AXIS));
+        JLabel titleLabel = new JLabel("我的预约", JLabel.CENTER);
+        titleLabel.setFont(HealthTheme.FONT_TITLE);
+        titleLabel.setForeground(HealthTheme.PRIMARY);
+        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JButton printBtn = new JButton("打印报告");
-        printBtn.setFont(new Font("微软雅黑", Font.BOLD, 13));
-        printBtn.setBackground(new Color(70, 104, 197));
-        printBtn.setForeground(Color.BLACK);
-        printBtn.setFocusPainted(false);
-        printBtn.setAlignmentX(Component.RIGHT_ALIGNMENT);
+        JLabel subtitleLabel = new JLabel("查看和管理您的体检预约记录", JLabel.CENTER);
+        subtitleLabel.setFont(HealthTheme.FONT_BODY_SM);
+        subtitleLabel.setForeground(HealthTheme.TEXT_HINT);
+        subtitleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        titlePanel.add(titleLabel);
+        titlePanel.add(Box.createRigidArea(new Dimension(0, 5)));
+        titlePanel.add(subtitleLabel);
+
+        headerPanel.add(titlePanel, BorderLayout.CENTER);
+
+        // 右侧工具按钮
+        JPanel rightToolbar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        rightToolbar.setBackground(Color.WHITE);
+
+        JButton printBtn = createStyledButton("打印报告", HealthTheme.BTN_PRIMARY);
         printBtn.addActionListener(this::handlePrintReport);
         rightToolbar.add(printBtn);
 
-        rightToolbar.add(Box.createVerticalStrut(5));
-
-        JButton viewReportBtn = new JButton("查看医生报告");
-        viewReportBtn.setFont(new Font("微软雅黑", Font.BOLD, 13));
-        viewReportBtn.setBackground(new Color(102, 153, 204));
-        viewReportBtn.setForeground(Color.BLACK);
-        viewReportBtn.setFocusPainted(false);
-        viewReportBtn.setAlignmentX(Component.RIGHT_ALIGNMENT);
+        JButton viewReportBtn = createStyledButton("查看医生报告", HealthTheme.BTN_SECONDARY);
         viewReportBtn.addActionListener(this::handleViewDoctorReport);
         rightToolbar.add(viewReportBtn);
-        toolbarPanel.add(rightToolbar, BorderLayout.EAST);
 
-        // 分类按钮
-        JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 2));
-        JButton pendingBtn = new JButton("未处理");
-        JButton completedBtn = new JButton("已处理");
-        JButton cancelledBtn = new JButton("已取消");
-        Font filterFont = new Font("微软雅黑", Font.BOLD, 12);
-        for (JButton btn : new JButton[]{pendingBtn, completedBtn, cancelledBtn}) {
-            btn.setFont(filterFont);
-            btn.setFocusPainted(false);
-            btn.setPreferredSize(new Dimension(80, 28));
-        }
-        pendingBtn.setBackground(new Color(255, 193, 7));
-        pendingBtn.setForeground(Color.BLACK);
-        completedBtn.setBackground(new Color(76, 175, 80));
-        completedBtn.setForeground(Color.BLACK);
-        cancelledBtn.setBackground(new Color(158, 158, 158));
-        cancelledBtn.setForeground(Color.BLACK);
+        headerPanel.add(rightToolbar, BorderLayout.EAST);
+
+        // ===== 分类筛选按钮 =====
+        JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
+        filterPanel.setBackground(Color.WHITE);
+        filterPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
+
+        JButton pendingBtn = createFilterButton("待检查", new Color(255, 193, 7));
+        JButton completedBtn = createFilterButton("已完成", new Color(76, 175, 80));
+        JButton cancelledBtn = createFilterButton("已取消", new Color(158, 158, 158));
 
         pendingBtn.addActionListener(e -> { currentFilter = "PENDING"; loadAppointmentData(); });
         completedBtn.addActionListener(e -> { currentFilter = "COMPLETED"; loadAppointmentData(); });
@@ -108,21 +103,71 @@ public class AppointmentView {
         filterPanel.add(completedBtn);
         filterPanel.add(cancelledBtn);
 
+        // 组装顶部区域
         JPanel topPanel = new JPanel(new BorderLayout());
-        topPanel.add(toolbarPanel, BorderLayout.NORTH);
+        topPanel.setBackground(Color.WHITE);
+        topPanel.add(headerPanel, BorderLayout.NORTH);
         topPanel.add(filterPanel, BorderLayout.SOUTH);
 
-        // 预约表格
-        String[] columnNames = { "ID", "检查组/项目", "类型", "预约时间", "详情", "支付状态", "操作" };
+        // ===== 预约表格 =====
+        String[] columnNames = { "序号", "检查组/项目", "类型", "预约时间", "详情", "支付状态", "操作" };
         tableModel = new DefaultTableModel(columnNames, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return column == 4 || column == 5 || column == 6; // "详情"列、"支付状态"列和"操作"列可编辑
+                return column == 4 || column == 5 || column == 6;
             }
         };
 
-        appointmentTable = new JTable(tableModel);
-        appointmentTable.setRowHeight(30);
+        appointmentTable = new JTable(tableModel) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return column == 4 || column == 5 || column == 6;
+            }
+        };
+        
+        appointmentTable.setRowHeight(36);
+        appointmentTable.setFont(HealthTheme.FONT_BODY_SM);
+        appointmentTable.getTableHeader().setFont(HealthTheme.FONT_BUTTON);
+        appointmentTable.getTableHeader().setBackground(HealthTheme.TABLE_HEADER);
+        appointmentTable.getTableHeader().setForeground(Color.WHITE);
+        appointmentTable.getTableHeader().setReorderingAllowed(false);
+        appointmentTable.getTableHeader().setResizingAllowed(false);
+        appointmentTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+        appointmentTable.setSelectionBackground(HealthTheme.TABLE_SELECTED);
+        appointmentTable.setSelectionForeground(HealthTheme.TEXT_PRIMARY);
+        appointmentTable.setGridColor(HealthTheme.BORDER);
+        appointmentTable.setShowHorizontalLines(true);
+        appointmentTable.setShowVerticalLines(false);
+        appointmentTable.setIntercellSpacing(new Dimension(0, 0));
+        appointmentTable.setBackground(Color.WHITE);
+        
+        // 自定义表头渲染器
+        DefaultTableCellRenderer headerRenderer = new DefaultTableCellRenderer();
+        headerRenderer.setBackground(HealthTheme.TABLE_HEADER);
+        headerRenderer.setForeground(Color.WHITE);
+        headerRenderer.setFont(HealthTheme.FONT_BUTTON);
+        headerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+        appointmentTable.getTableHeader().setDefaultRenderer(headerRenderer);
+        
+        // 设置列宽
+        appointmentTable.getColumnModel().getColumn(0).setPreferredWidth(60);
+        appointmentTable.getColumnModel().getColumn(0).setMaxWidth(70);
+        appointmentTable.getColumnModel().getColumn(1).setPreferredWidth(200);
+        appointmentTable.getColumnModel().getColumn(2).setPreferredWidth(100);
+        appointmentTable.getColumnModel().getColumn(3).setPreferredWidth(160);
+        appointmentTable.getColumnModel().getColumn(4).setPreferredWidth(80);
+        appointmentTable.getColumnModel().getColumn(5).setPreferredWidth(100);
+        appointmentTable.getColumnModel().getColumn(6).setPreferredWidth(80);
+        
+        // 为数据列设置居中对齐渲染器
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+        
+        for (int i = 0; i < appointmentTable.getColumnCount(); i++) {
+            appointmentTable.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
+        }
+
+        // 自定义单元格渲染器和编辑器
         appointmentTable.getColumnModel().getColumn(4).setCellRenderer(new DetailButtonRenderer());
         appointmentTable.getColumnModel().getColumn(4).setCellEditor(new DetailButtonEditor(new JCheckBox(), this));
         appointmentTable.getColumnModel().getColumn(5).setCellRenderer(new PaymentStatusRenderer());
@@ -133,6 +178,8 @@ public class AppointmentView {
         loadAppointmentData();
 
         JScrollPane scrollPane = new JScrollPane(appointmentTable);
+        scrollPane.setBorder(BorderFactory.createLineBorder(HealthTheme.BORDER, 1));
+        scrollPane.getViewport().setBackground(Color.WHITE);
 
         appointmentPanel.add(topPanel, BorderLayout.NORTH);
         appointmentPanel.add(scrollPane, BorderLayout.CENTER);
@@ -147,6 +194,7 @@ public class AppointmentView {
         List<Appointment> appointments = controller.getUserAppointmentsByStatus(
                 currentUser.getId(), currentFilter);
 
+        int index = 1;
         for (Appointment appointment : appointments) {
             String itemName = "";
             String type = "";
@@ -161,7 +209,7 @@ public class AppointmentView {
             }
 
             Object[] rowData = {
-                    appointment.getId(),
+                    index++,
                     itemName,
                     type,
                     appointment.getAppointmentTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")),
@@ -313,8 +361,8 @@ public class AppointmentView {
             label = (value == null) ? "" : value.toString();
             JButton button = new JButton(label);
             button.addActionListener(e -> {
-                Long appointmentId = (Long) table.getValueAt(row, 0);
-                if (controller.cancelAppointment(appointmentId)) {
+                Long appointmentId = getAppointmentIdFromRow(row);
+                if (appointmentId != null && controller.cancelAppointment(appointmentId)) {
                     JOptionPane.showMessageDialog(table, "预约已取消", "成功", JOptionPane.INFORMATION_MESSAGE);
                     refreshAppointmentData();
                 } else {
@@ -386,7 +434,11 @@ public class AppointmentView {
             button.setFocusPainted(false);
 
             button.addActionListener(e -> {
-                Long appointmentId = (Long) table.getValueAt(row, 0);
+                Long appointmentId = getAppointmentIdFromRow(row);
+                if (appointmentId == null) {
+                    fireEditingStopped();
+                    return;
+                }
                 String currentStatus = (String) table.getValueAt(row, 5);
 
                 if ("已支付".equals(currentStatus)) {
@@ -496,8 +548,10 @@ public class AppointmentView {
             button.setFont(new Font("微软雅黑", Font.BOLD, 13));
             button.setForeground(new Color(41, 75, 166));
             button.addActionListener(e -> {
-                Long appointmentId = (Long) table.getValueAt(row, 0);
-                parentView.showAppointmentDetail(appointmentId);
+                Long appointmentId = getAppointmentIdFromRow(row);
+                if (appointmentId != null) {
+                    parentView.showAppointmentDetail(appointmentId);
+                }
                 fireEditingStopped();
             });
             return button;
@@ -866,6 +920,76 @@ public class AppointmentView {
         panel.add(confirmBtn, BorderLayout.CENTER);
         paymentDialog.add(panel);
         paymentDialog.setVisible(true);
+    }
+
+    /**
+     * 创建美化的按钮
+     */
+    private JButton createStyledButton(String text, Color bgColor) {
+        JButton button = new JButton(text);
+        button.setFont(HealthTheme.FONT_BUTTON);
+        button.setBackground(bgColor);
+        button.setForeground(Color.WHITE);
+        button.setFocusPainted(false);
+        button.setBorderPainted(false);
+        button.setOpaque(true);
+        button.setPreferredSize(new Dimension(130, 38));
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        
+        // 添加悬停效果
+        button.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                button.setBackground(bgColor.darker());
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                button.setBackground(bgColor);
+            }
+        });
+        
+        return button;
+    }
+
+    /**
+     * 创建筛选按钮
+     */
+    private JButton createFilterButton(String text, Color bgColor) {
+        JButton button = new JButton(text);
+        button.setFont(new Font("微软雅黑", Font.BOLD, 13));
+        button.setBackground(bgColor);
+        button.setForeground(Color.WHITE);
+        button.setFocusPainted(false);
+        button.setBorderPainted(false);
+        button.setOpaque(true);
+        button.setPreferredSize(new Dimension(90, 32));
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        
+        // 添加悬停效果
+        button.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                button.setBackground(bgColor.darker());
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                button.setBackground(bgColor);
+            }
+        });
+        
+        return button;
+    }
+
+    /**
+     * 从表格行获取预约ID（需要从数据源中查找）
+     */
+    private Long getAppointmentIdFromRow(int rowIndex) {
+        if (rowIndex < 0 || rowIndex >= tableModel.getRowCount()) {
+            return null;
+        }
+        // 重新加载数据，找到对应的预约
+        List<Appointment> appointments = controller.getUserAppointmentsByStatus(
+                currentUser.getId(), currentFilter);
+        if (rowIndex < appointments.size()) {
+            return appointments.get(rowIndex).getId();
+        }
+        return null;
     }
 
 }

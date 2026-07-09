@@ -4,6 +4,7 @@ import com.healthsys.common.entity.Appointment;
 import com.healthsys.common.entity.Report;
 import com.healthsys.dao.AppointmentDAO;
 import com.healthsys.dao.ReportDAO;
+import com.healthsys.ui.HealthTheme;
 
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
@@ -29,7 +30,7 @@ public class ReportPanel extends JPanel {
     public ReportPanel(Long doctorId) {
         this.doctorId = doctorId;
         setLayout(new BorderLayout());
-        setBackground(new Color(245, 245, 245));
+        setBackground(Color.WHITE);
         createToolbar();
         initializeTable();
         refreshData();
@@ -37,11 +38,11 @@ public class ReportPanel extends JPanel {
 
     private void createToolbar() {
         JPanel toolbar = new JPanel(new BorderLayout());
-        toolbar.setBackground(new Color(245, 245, 245));
-        toolbar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(220, 220, 220)));
+        toolbar.setBackground(Color.WHITE);
+        toolbar.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
-        buttonPanel.setBackground(new Color(245, 245, 245));
+        buttonPanel.setBackground(Color.WHITE);
 
         JButton writeBtn = CrudPanel.createStyledButton("撰写报告", new Color(102, 204, 153));
         writeBtn.addActionListener(e -> {
@@ -75,7 +76,7 @@ public class ReportPanel extends JPanel {
 
         // 快速分类按钮放在右侧
         JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 5));
-        filterPanel.setBackground(new Color(245, 245, 245));
+        filterPanel.setBackground(Color.WHITE);
 
         JButton allBtn = new JButton("全部");
         JButton reportedBtn = new JButton("已撰写");
@@ -105,27 +106,24 @@ public class ReportPanel extends JPanel {
         tableModel = new ReportTableModel();
         table = new JTable(tableModel);
 
-        Font tableFont = new Font("微软雅黑", Font.PLAIN, 14);
-        table.setFont(tableFont);
-        table.getTableHeader().setFont(new Font("微软雅黑", Font.BOLD, 14));
+        // 使用HealthTheme统一样式
+        table.setFont(HealthTheme.FONT_BODY_SM);
         table.setRowHeight(36);
-        table.setSelectionBackground(new Color(220, 230, 250));
-        table.setSelectionForeground(Color.BLACK);
-        table.setGridColor(new Color(190, 190, 190));
-        table.getTableHeader().setBackground(new Color(240, 240, 240));
-        table.setShowGrid(true);
-        table.setIntercellSpacing(new Dimension(1, 1));
+        table.setShowGrid(false);
+        table.setIntercellSpacing(new Dimension(0, 0));
 
-        table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
-            @Override
-            public Component getTableCellRendererComponent(JTable table, Object value,
-                                                           boolean isSelected, boolean hasFocus, int row, int column) {
-                super.getTableCellRendererComponent(table, value,
-                        isSelected, hasFocus, row, column);
-                setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
-                return this;
-            }
-        });
+        // 自定义表头渲染器
+        DefaultTableCellRenderer headerRenderer = new DefaultTableCellRenderer();
+        headerRenderer.setBackground(HealthTheme.TABLE_HEADER);
+        headerRenderer.setForeground(Color.WHITE);
+        headerRenderer.setFont(HealthTheme.FONT_BUTTON);
+        headerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+        table.getTableHeader().setDefaultRenderer(headerRenderer);
+
+        // 数据列居中对齐
+        DefaultTableCellRenderer cellRenderer = new DefaultTableCellRenderer();
+        cellRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+        table.setDefaultRenderer(Object.class, cellRenderer);
 
         // 列: 患者, 检查组, 检查日期, 报告状态
         int[] widths = {80, 180, 110, 80};
@@ -135,7 +133,7 @@ public class ReportPanel extends JPanel {
         }
         table.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
 
-        // 报告状态列颜色渲染
+        // 报告状态列 - 居中显示,无彩色背景
         table.getColumnModel().getColumn(3).setCellRenderer(new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value,
@@ -143,17 +141,10 @@ public class ReportPanel extends JPanel {
                 JLabel lbl = (JLabel) super.getTableCellRendererComponent(
                         table, value, isSelected, hasFocus, row, col);
                 lbl.setHorizontalAlignment(SwingConstants.CENTER);
-                lbl.setFont(new Font("微软雅黑", Font.BOLD, 12));
                 if (!isSelected) {
-                    if ("已撰写".equals(value)) {
-                        lbl.setBackground(REPORTED_BG);
-                        lbl.setForeground(REPORTED_FG);
-                    } else {
-                        lbl.setBackground(UNREPORTED_BG);
-                        lbl.setForeground(UNREPORTED_FG);
-                    }
+                    lbl.setForeground(HealthTheme.TEXT_PRIMARY);
                 }
-                lbl.setBorder(BorderFactory.createEmptyBorder(2, 8, 2, 8));
+                lbl.setFont(HealthTheme.FONT_BODY_SM);
                 return lbl;
             }
         });

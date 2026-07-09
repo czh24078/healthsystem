@@ -2,6 +2,7 @@ package com.healthsys.ui.medical;
 
 import com.healthsys.common.entity.Appointment;
 import com.healthsys.dao.AppointmentDAO;
+import com.healthsys.ui.HealthTheme;
 import com.toedter.calendar.JDateChooser;
 
 import javax.swing.*;
@@ -37,28 +38,29 @@ public class AppointmentPanel extends CrudPanel<Appointment> {
     private void setupSearchPanel() {
         JPanel sp = getSearchPanel();
         sp.setLayout(new FlowLayout(FlowLayout.RIGHT, 8, 5));
-        Font fieldFont = new Font("微软雅黑", Font.PLAIN, 12);
 
         dateFromChooser = new JDateChooser();
         dateFromChooser.setPreferredSize(new Dimension(105, 28));
         dateFromChooser.setDateFormatString("yyyy-MM-dd");
+        dateFromChooser.setFont(HealthTheme.FONT_BODY_SM);
         dateFromChooser.setDate(Date.from(LocalDate.now().minusDays(30).atStartOfDay(ZoneId.systemDefault()).toInstant()));
 
         dateToChooser = new JDateChooser();
         dateToChooser.setPreferredSize(new Dimension(105, 28));
         dateToChooser.setDateFormatString("yyyy-MM-dd");
+        dateToChooser.setFont(HealthTheme.FONT_BODY_SM);
         dateToChooser.setDate(Date.from(LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant()));
 
         userNameSearchField = new JTextField(6);
-        userNameSearchField.setFont(fieldFont);
+        userNameSearchField.setFont(HealthTheme.FONT_BODY_SM);
         userNameSearchField.setPreferredSize(new Dimension(70, 28));
 
         JLabel dateLabel = new JLabel("日期");
-        dateLabel.setFont(fieldFont);
+        dateLabel.setFont(HealthTheme.FONT_BODY_SM);
         JLabel toLabel = new JLabel("至");
-        toLabel.setFont(fieldFont);
+        toLabel.setFont(HealthTheme.FONT_BODY_SM);
         JLabel userLabel = new JLabel("用户");
-        userLabel.setFont(fieldFont);
+        userLabel.setFont(HealthTheme.FONT_BODY_SM);
 
         sp.add(dateLabel);
         sp.add(dateFromChooser);
@@ -148,27 +150,24 @@ public class AppointmentPanel extends CrudPanel<Appointment> {
         tableModel = new AppointmentTableModel();
         table = new JTable(tableModel);
 
-        Font tableFont = new Font("微软雅黑", Font.PLAIN, 14);
-        table.setFont(tableFont);
-        table.getTableHeader().setFont(new Font("微软雅黑", Font.BOLD, 14));
+        // 使用HealthTheme统一样式
+        table.setFont(HealthTheme.FONT_BODY_SM);
         table.setRowHeight(36);
-        table.setSelectionBackground(new Color(220, 230, 250));
-        table.setSelectionForeground(Color.BLACK);
-        table.setGridColor(new Color(190, 190, 190));
-        table.getTableHeader().setBackground(new Color(240, 240, 240));
-        table.setShowGrid(true);
-        table.setIntercellSpacing(new Dimension(1, 1));
+        table.setShowGrid(false);
+        table.setIntercellSpacing(new Dimension(0, 0));
 
-        table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
-            @Override
-            public Component getTableCellRendererComponent(JTable table, Object value,
-                                                           boolean isSelected, boolean hasFocus, int row, int column) {
-                super.getTableCellRendererComponent(table, value,
-                        isSelected, hasFocus, row, column);
-                setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
-                return this;
-            }
-        });
+        // 自定义表头渲染器
+        DefaultTableCellRenderer headerRenderer = new DefaultTableCellRenderer();
+        headerRenderer.setBackground(HealthTheme.TABLE_HEADER);
+        headerRenderer.setForeground(Color.WHITE);
+        headerRenderer.setFont(HealthTheme.FONT_BUTTON);
+        headerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+        table.getTableHeader().setDefaultRenderer(headerRenderer);
+
+        // 数据列居中对齐
+        DefaultTableCellRenderer cellRenderer = new DefaultTableCellRenderer();
+        cellRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+        table.setDefaultRenderer(Object.class, cellRenderer);
 
         // 列: 用户, 检查组, 检查日期, 时段, 状态, 支付
         int[] widths = {80, 160, 100, 60, 70, 70};

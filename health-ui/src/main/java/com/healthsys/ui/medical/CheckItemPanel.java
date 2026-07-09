@@ -1,6 +1,7 @@
 package com.healthsys.ui.medical;
 
 import com.healthsys.common.entity.CheckItem;
+import com.healthsys.ui.HealthTheme;
 import com.healthsys.ui.medical.CheckItemDialog;
 import com.healthsys.dao.CheckItemDAO;
 
@@ -28,10 +29,12 @@ public class CheckItemPanel extends CrudPanel<CheckItem> {
         // 添加查询字段
         getSearchPanel().add(new JLabel("名称:"));
         nameSearchField = new JTextField(15);
+        nameSearchField.setFont(HealthTheme.FONT_BODY_SM);
         getSearchPanel().add(nameSearchField);
 
         getSearchPanel().add(new JLabel("代码:"));
         codeSearchField = new JTextField(15);
+        codeSearchField.setFont(HealthTheme.FONT_BODY_SM);
         getSearchPanel().add(codeSearchField);
 
         // 设置查询按钮事件
@@ -109,28 +112,24 @@ public class CheckItemPanel extends CrudPanel<CheckItem> {
         tableModel = new CheckItemTableModel();
         table = new JTable(tableModel);
 
-        // 表格样式优化
-        table.setFont(new Font("微软雅黑", Font.PLAIN, 13));
-        table.getTableHeader().setFont(new Font("微软雅黑", Font.BOLD, 14));
-        table.setRowHeight(30);
-        table.setSelectionBackground(new Color(220, 230, 250));
-        table.setSelectionForeground(Color.BLACK);
-        table.setGridColor(new Color(220, 220, 220));
-        table.getTableHeader().setBackground(new Color(240, 240, 240));
+        // 使用HealthTheme统一样式
+        table.setFont(HealthTheme.FONT_BODY_SM);
+        table.setRowHeight(36);
+        table.setShowGrid(false);
+        table.setIntercellSpacing(new Dimension(0, 0));
+        
+        // 自定义表头渲染器
+        DefaultTableCellRenderer headerRenderer = new DefaultTableCellRenderer();
+        headerRenderer.setBackground(HealthTheme.TABLE_HEADER);
+        headerRenderer.setForeground(Color.WHITE);
+        headerRenderer.setFont(HealthTheme.FONT_BUTTON);
+        headerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+        table.getTableHeader().setDefaultRenderer(headerRenderer);
 
-        // 隔行变色
-        table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
-            @Override
-            public Component getTableCellRendererComponent(JTable table, Object value,
-                                                           boolean isSelected, boolean hasFocus, int row, int column) {
-                Component c = super.getTableCellRendererComponent(table, value,
-                        isSelected, hasFocus, row, column);
-                if (!isSelected) {
-                    c.setBackground(row % 2 == 0 ? Color.WHITE : new Color(248, 248, 248));
-                }
-                return c;
-            }
-        });
+        // 数据列居中对齐
+        DefaultTableCellRenderer cellRenderer = new DefaultTableCellRenderer();
+        cellRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+        table.setDefaultRenderer(Object.class, cellRenderer);
 
         // 列宽自动调整
         table.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);

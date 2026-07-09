@@ -6,9 +6,11 @@ import com.healthsys.service.PaymentService;
 import com.healthsys.common.entity.Users;
 import com.healthsys.common.entity.Appointment;
 import com.healthsys.common.entity.CheckItemGroup;
+import com.healthsys.ui.HealthTheme;
 import com.toedter.calendar.JDateChooser;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.time.ZoneId;
@@ -28,31 +30,106 @@ public class MessagesView {
     }
 
     private void initializeUI() {
-        messagesPanel = new JPanel(new BorderLayout());
-        messagesPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        messagesPanel = new JPanel(new BorderLayout(0, 0));
+        messagesPanel.setBackground(Color.WHITE);
+        messagesPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        // 标题面板
-        JPanel titlePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JLabel titleLabel = new JLabel("预约检查");
-        titleLabel.setFont(new Font("微软雅黑", Font.BOLD, 18));
+        // ===== 标题栏 =====
+        JPanel headerPanel = new JPanel(new BorderLayout(10, 0));
+        headerPanel.setBackground(Color.WHITE);
+        headerPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
+
+        JPanel titlePanel = new JPanel();
+        titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.Y_AXIS));
+        titlePanel.setBackground(Color.WHITE);
+
+        JLabel titleLabel = new JLabel("体检套餐", JLabel.CENTER);
+        titleLabel.setFont(HealthTheme.FONT_TITLE);
+        titleLabel.setForeground(HealthTheme.PRIMARY);
+        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JLabel subtitleLabel = new JLabel("浏览并预约适合您的体检套餐", JLabel.CENTER);
+        subtitleLabel.setFont(HealthTheme.FONT_BODY_SM);
+        subtitleLabel.setForeground(HealthTheme.TEXT_HINT);
+        subtitleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
         titlePanel.add(titleLabel);
+        titlePanel.add(Box.createRigidArea(new Dimension(0, 5)));
+        titlePanel.add(subtitleLabel);
 
-        JButton refreshBtn = new JButton("刷新");
-        refreshBtn.setFont(new Font("微软雅黑", Font.PLAIN, 13));
+        headerPanel.add(titlePanel, BorderLayout.CENTER);
+
+        // 右侧刷新按钮
+        JButton refreshBtn = createStyledButton("刷新列表", HealthTheme.BTN_SECONDARY);
+        refreshBtn.setPreferredSize(new Dimension(100, 38));
         refreshBtn.addActionListener(e -> refreshGroupData());
-        titlePanel.add(refreshBtn);
 
-        // 检查组表格
-        String[] groupColumns = { "ID", "检查组名称", "描述", "价格", "预约", "查看详情" };
+        JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+        rightPanel.setBackground(Color.WHITE);
+        rightPanel.add(refreshBtn);
+        headerPanel.add(rightPanel, BorderLayout.EAST);
+
+        // ===== 检查组表格 =====
+        String[] groupColumns = { "序号", "检查组名称", "描述", "价格", "预约", "查看详情" };
         groupModel = new DefaultTableModel(groupColumns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return column == 4 || column == 5; // 只有操作列可编辑
+                return column == 4 || column == 5;
             }
         };
 
-        groupTable = new JTable(groupModel);
-        groupTable.setRowHeight(30);
+        groupTable = new JTable(groupModel) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return column == 4 || column == 5;
+            }
+        };
+        
+        groupTable.setRowHeight(36);
+        groupTable.setFont(HealthTheme.FONT_BODY_SM);
+        groupTable.getTableHeader().setFont(HealthTheme.FONT_BUTTON);
+        groupTable.getTableHeader().setBackground(HealthTheme.TABLE_HEADER);
+        groupTable.getTableHeader().setForeground(Color.WHITE);
+        groupTable.getTableHeader().setReorderingAllowed(false);
+        groupTable.getTableHeader().setResizingAllowed(false);
+        groupTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+        groupTable.setSelectionBackground(HealthTheme.TABLE_SELECTED);
+        groupTable.setSelectionForeground(HealthTheme.TEXT_PRIMARY);
+        groupTable.setGridColor(HealthTheme.BORDER);
+        groupTable.setShowHorizontalLines(true);
+        groupTable.setShowVerticalLines(false);
+        groupTable.setIntercellSpacing(new Dimension(0, 0));
+        groupTable.setBackground(Color.WHITE);
+        
+        // 自定义表头渲染器
+        DefaultTableCellRenderer headerRenderer = new DefaultTableCellRenderer();
+        headerRenderer.setBackground(HealthTheme.TABLE_HEADER);
+        headerRenderer.setForeground(Color.WHITE);
+        headerRenderer.setFont(HealthTheme.FONT_BUTTON);
+        headerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+        groupTable.getTableHeader().setDefaultRenderer(headerRenderer);
+        
+        // 设置列宽
+        groupTable.getColumnModel().getColumn(0).setPreferredWidth(60);
+        groupTable.getColumnModel().getColumn(0).setMaxWidth(70);
+        groupTable.getColumnModel().getColumn(1).setPreferredWidth(180);
+        groupTable.getColumnModel().getColumn(2).setPreferredWidth(250);
+        groupTable.getColumnModel().getColumn(3).setPreferredWidth(100);
+        groupTable.getColumnModel().getColumn(4).setPreferredWidth(100);
+        groupTable.getColumnModel().getColumn(5).setPreferredWidth(100);
+        
+        // 为数据列设置居中对齐渲染器
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+        
+        for (int i = 0; i < groupTable.getColumnCount(); i++) {
+            groupTable.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
+        }
+
+        // 加载检查组数据
+        loadGroupData();
+
+        // 自定义单元格渲染器和编辑器
         groupTable.getColumnModel().getColumn(4).setCellRenderer(new ButtonRenderer());
         groupTable.getColumnModel().getColumn(4)
                 .setCellEditor(new GroupButtonEditor(new JCheckBox(), messagesPanel));
@@ -60,19 +137,21 @@ public class MessagesView {
         groupTable.getColumnModel().getColumn(5)
                 .setCellEditor(new MessagesDetailButtonEditor(new JCheckBox(), messagesPanel, controller));
 
-        // 加载检查组数据
-        loadGroupData();
+        JScrollPane scrollPane = new JScrollPane(groupTable);
+        scrollPane.setBorder(BorderFactory.createLineBorder(HealthTheme.BORDER, 1));
+        scrollPane.getViewport().setBackground(Color.WHITE);
 
-        messagesPanel.add(titlePanel, BorderLayout.NORTH);
-        messagesPanel.add(new JScrollPane(groupTable), BorderLayout.CENTER);
+        messagesPanel.add(headerPanel, BorderLayout.NORTH);
+        messagesPanel.add(scrollPane, BorderLayout.CENTER);
     }
 
     private void loadGroupData() {
         groupModel.setRowCount(0);
         java.util.List<CheckItemGroup> groups = controller.getAllGroups();
+        int index = 1;
         for (CheckItemGroup pkg : groups) {
             Object[] rowData = {
-                    pkg.getId(),
+                    index++,
                     pkg.getName(),
                     pkg.getDescription(),
                     pkg.getPrice(),
@@ -119,8 +198,12 @@ public class MessagesView {
             label = (value == null) ? "" : value.toString();
             JButton button = new JButton(label);
             button.addActionListener(e -> {
-                Long groupId = (Long) table.getValueAt(row, 0);
-                showTimeSelectionDialog(groupId);
+                // 直接从数据源获取groupId
+                java.util.List<CheckItemGroup> groups = controller.getAllGroups();
+                if (row >= 0 && row < groups.size()) {
+                    Long groupId = groups.get(row).getId();
+                    showTimeSelectionDialog(groupId);
+                }
                 fireEditingStopped();
             });
             return button;
@@ -259,6 +342,46 @@ public class MessagesView {
         timeDialog.add(panel);
         timeDialog.setVisible(true);
     }
+
+    /**
+     * 从表格行获取检查组ID
+     */
+    Long getGroupIdFromRow(int rowIndex) {
+        if (rowIndex < 0 || rowIndex >= groupModel.getRowCount()) {
+            return null;
+        }
+        java.util.List<CheckItemGroup> groups = controller.getAllGroups();
+        if (rowIndex < groups.size()) {
+            return groups.get(rowIndex).getId();
+        }
+        return null;
+    }
+
+    /**
+     * 创建美化的按钮
+     */
+    private JButton createStyledButton(String text, Color bgColor) {
+        JButton button = new JButton(text);
+        button.setFont(HealthTheme.FONT_BUTTON);
+        button.setBackground(bgColor);
+        button.setForeground(Color.WHITE);
+        button.setFocusPainted(false);
+        button.setBorderPainted(false);
+        button.setOpaque(true);
+        button.setPreferredSize(new Dimension(130, 38));
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        
+        button.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                button.setBackground(bgColor.darker());
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                button.setBackground(bgColor);
+            }
+        });
+        
+        return button;
+    }
 }
 
 class MessagesDetailButtonEditor extends DefaultCellEditor {
@@ -277,11 +400,14 @@ class MessagesDetailButtonEditor extends DefaultCellEditor {
         label = (value == null) ? "" : value.toString();
         JButton button = new JButton(label);
         button.addActionListener(e -> {
-            Long groupId = (Long) table.getValueAt(row, 0);
-            CheckItemGroup selectedGroup = controller.getCheckItemGroupById(groupId);
-
-            if (selectedGroup != null) {
-                showGroupDetail(selectedGroup);
+            // 直接从数据源获取groupId
+            java.util.List<CheckItemGroup> groups = controller.getAllGroups();
+            if (row >= 0 && row < groups.size()) {
+                Long groupId = groups.get(row).getId();
+                CheckItemGroup selectedGroup = controller.getCheckItemGroupById(groupId);
+                if (selectedGroup != null) {
+                    showGroupDetail(selectedGroup);
+                }
             }
             fireEditingStopped();
         });

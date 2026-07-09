@@ -2,6 +2,7 @@ package com.healthsys.ui.admin;
 
 import com.healthsys.common.entity.Doctor;
 import com.healthsys.dao.DoctorDAO;
+import com.healthsys.ui.HealthTheme;
 import com.healthsys.ui.medical.CrudPanel;
 
 import javax.swing.*;
@@ -28,10 +29,12 @@ public class DoctorPanel extends CrudPanel<Doctor> {
     private void setupSearchPanel() {
         getSearchPanel().add(new JLabel("ID:"));
         idSearchField = new JTextField(8);
+        idSearchField.setFont(HealthTheme.FONT_BODY_SM);
         getSearchPanel().add(idSearchField);
 
         getSearchPanel().add(new JLabel("姓名:"));
         nameSearchField = new JTextField(15);
+        nameSearchField.setFont(HealthTheme.FONT_BODY_SM);
         getSearchPanel().add(nameSearchField);
 
         getSearchButton().addActionListener(e -> searchDoctors());
@@ -114,26 +117,24 @@ public class DoctorPanel extends CrudPanel<Doctor> {
         tableModel = new DoctorTableModel();
         table = new JTable(tableModel);
 
-        table.setFont(new Font("微软雅黑", Font.PLAIN, 13));
-        table.getTableHeader().setFont(new Font("微软雅黑", Font.BOLD, 14));
-        table.setRowHeight(30);
+        // 使用HealthTheme统一样式
+        table.setFont(HealthTheme.FONT_BODY_SM);
+        table.setRowHeight(36);
         table.setShowGrid(false);
         table.setIntercellSpacing(new Dimension(0, 0));
-        table.setSelectionBackground(new Color(220, 240, 255));
-        table.setSelectionForeground(Color.BLACK);
+        
+        // 自定义表头渲染器
+        DefaultTableCellRenderer headerRenderer = new DefaultTableCellRenderer();
+        headerRenderer.setBackground(HealthTheme.TABLE_HEADER);
+        headerRenderer.setForeground(Color.WHITE);
+        headerRenderer.setFont(HealthTheme.FONT_BUTTON);
+        headerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+        table.getTableHeader().setDefaultRenderer(headerRenderer);
 
-        table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
-            @Override
-            public Component getTableCellRendererComponent(JTable table, Object value,
-                                                           boolean isSelected, boolean hasFocus,
-                                                           int row, int column) {
-                Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-                if (!isSelected) {
-                    c.setBackground(row % 2 == 0 ? Color.WHITE : new Color(248, 248, 248));
-                }
-                return c;
-            }
-        });
+        // 数据列居中对齐
+        DefaultTableCellRenderer cellRenderer = new DefaultTableCellRenderer();
+        cellRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+        table.setDefaultRenderer(Object.class, cellRenderer);
 
         table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
         JScrollPane scrollPane = new JScrollPane(table);

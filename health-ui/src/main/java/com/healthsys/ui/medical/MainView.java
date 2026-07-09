@@ -1,6 +1,7 @@
 package com.healthsys.ui.medical;
 
 import com.healthsys.common.entity.Users;
+import com.healthsys.ui.HealthTheme;
 
 import javax.swing.*;
 import java.awt.*;
@@ -37,7 +38,7 @@ public class MainView extends JPanel {
         this.doctorName = doctorName;
         this.role = null;
         setLayout(new BorderLayout());
-        setBackground(new Color(245, 245, 245));
+        setBackground(Color.WHITE);
 
         createSidebar();
         createContentArea();
@@ -55,9 +56,9 @@ public class MainView extends JPanel {
     private void createSidebar() {
         JPanel sidebar = new JPanel();
         sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
-        sidebar.setBackground(new Color(70, 104, 197));
+        sidebar.setBackground(new Color(70, 104, 197)); // #4668C5
         sidebar.setPreferredSize(new Dimension(220, Integer.MAX_VALUE));
-        sidebar.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        sidebar.setBorder(BorderFactory.createEmptyBorder(15, 10, 10, 10));
 
         String[] navItems = {"首页", "预约管理", "报告管理", "关于"};
         for (String item : navItems) {
@@ -97,8 +98,8 @@ public class MainView extends JPanel {
         button.setAlignmentX(Component.LEFT_ALIGNMENT);
         button.setMaximumSize(new Dimension(180, 50));
         button.setPreferredSize(new Dimension(180, 50));
-        button.setFont(new Font("微软雅黑", Font.PLAIN, 14));
-        button.setBackground(new Color(90, 124, 217));
+        button.setFont(new Font("微软雅黑", Font.BOLD, 14));
+        button.setBackground(new Color(90, 124, 217)); // #5A7CD9
         button.setForeground(Color.BLACK);
         button.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
         button.setHorizontalAlignment(SwingConstants.LEFT);
@@ -107,10 +108,10 @@ public class MainView extends JPanel {
 
         button.addMouseListener(new MouseAdapter() {
             public void mouseEntered(MouseEvent evt) {
-                button.setBackground(new Color(120, 150, 240));
+                button.setBackground(new Color(120, 150, 240)); // 悬停色
             }
             public void mouseExited(MouseEvent evt) {
-                button.setBackground(new Color(90, 124, 217));
+                button.setBackground(new Color(90, 124, 217)); // 恢复原色
             }
         });
 
@@ -139,22 +140,22 @@ public class MainView extends JPanel {
     private void createContentArea() {
         contentPanel = new JPanel();
         contentPanel.setLayout(new CardLayout());
-        contentPanel.setBackground(new Color(245, 245, 245));
+        contentPanel.setBackground(Color.WHITE);
         contentPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         add(contentPanel, BorderLayout.CENTER);
     }
 
     private void showHome() {
         JPanel homePanel = new JPanel(new BorderLayout());
-        homePanel.setBackground(new Color(245, 245, 245));
+        homePanel.setBackground(Color.WHITE);
 
         JLabel welcomeLabel = new JLabel("欢迎使用健康管理系统", JLabel.CENTER);
-        welcomeLabel.setFont(new Font("微软雅黑", Font.BOLD, 32));
-        welcomeLabel.setForeground(new Color(70, 104, 197));
+        welcomeLabel.setFont(HealthTheme.FONT_PAGE_TITLE);
+        welcomeLabel.setForeground(HealthTheme.PRIMARY);
 
         JLabel userLabel = new JLabel((doctorName != null ? doctorName : "") + " 医生，您好！", JLabel.CENTER);
-        userLabel.setFont(new Font("微软雅黑", Font.PLAIN, 24));
-        userLabel.setForeground(new Color(100, 100, 100));
+        userLabel.setFont(HealthTheme.FONT_SUBTITLE);
+        userLabel.setForeground(HealthTheme.TEXT_SECONDARY);
 
         JPanel centerPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
@@ -162,7 +163,7 @@ public class MainView extends JPanel {
         gbc.insets = new Insets(10, 0, 30, 0);
         centerPanel.add(welcomeLabel, gbc);
         centerPanel.add(userLabel, gbc);
-        centerPanel.setBackground(new Color(245, 245, 245));
+        centerPanel.setBackground(Color.WHITE);
 
         homePanel.add(centerPanel, BorderLayout.CENTER);
 
