@@ -1,12 +1,19 @@
 package com.healthsys.ui.medical;
 
 import com.healthsys.common.entity.Appointment;
+import com.healthsys.common.entity.CheckItem;
+import com.healthsys.common.entity.CheckItemGroup;
+import com.healthsys.common.entity.ExamRecord;
 import com.healthsys.common.entity.Report;
 import com.healthsys.dao.AppointmentDAO;
+import com.healthsys.dao.ExamRecordDAO;
 import com.healthsys.dao.ReportDAO;
+import com.healthsys.service.AppointmentService;
+import com.healthsys.ui.user.WordExportService;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.File;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -17,11 +24,14 @@ public class ReportEditDialog extends JDialog {
     private int result = CANCEL_OPTION;
     private final Long doctorId;
     private final Long fixedAppointmentId;
-    private Report existingReport; // 选中预约已有的报告（可为 null）
+    private Report existingReport;
     private final ReportDAO reportDAO = new ReportDAO();
     private final AppointmentDAO appointmentDAO = new AppointmentDAO();
+    private final ExamRecordDAO examRecordDAO = new ExamRecordDAO();
+    private final AppointmentService appointmentService = new AppointmentService();
 
     private JComboBox<String> appointmentCombo;
+    private JTextArea examInfoArea;
     private JTextArea summaryArea;
     private List<Appointment> availableAppointments;
 
@@ -35,7 +45,7 @@ public class ReportEditDialog extends JDialog {
         this.existingReport = existingReport;
         setTitle(existingReport == null ? "撰写报告" : "编辑报告");
         setModal(true);
-        setSize(650, 450);
+        setSize(650, 600);
         setLocationRelativeTo(null);
         initUI();
         if (existingReport != null || fixedAppointmentId != null) {
@@ -44,6 +54,7 @@ public class ReportEditDialog extends JDialog {
         if (existingReport != null) {
             selectAppointmentInCombo(existingReport.getAppointmentId());
             loadSummaryFromReport(existingReport);
+            loadExamInfo(existingReport.getAppointmentId());
         }
     }
 
@@ -64,6 +75,7 @@ public class ReportEditDialog extends JDialog {
         Font labelFont = new Font("微软雅黑", Font.BOLD, 14);
         Font fieldFont = new Font("微软雅黑", Font.PLAIN, 14);
 
+        // 关联预约
         JPanel apptPanel = new JPanel(new BorderLayout(10, 0));
         apptPanel.setBackground(Color.WHITE);
         apptPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 35));
@@ -72,26 +84,44 @@ public class ReportEditDialog extends JDialog {
         appointmentCombo = new JComboBox<>();
         appointmentCombo.setFont(fieldFont);
         loadAppointments();
-        // 切换预约时自动加载已有报告
         appointmentCombo.addActionListener(e -> onAppointmentSelected());
         apptPanel.add(apptLabel, BorderLayout.WEST);
         apptPanel.add(appointmentCombo, BorderLayout.CENTER);
 
+        // 体检信息
+        JPanel examPanel = new JPanel(new BorderLayout(10, 5));
+        examPanel.setBackground(Color.WHITE);
+        JLabel examLabel = new JLabel("体检信息：");
+        examLabel.setFont(labelFont);
+        examInfoArea = new JTextArea(6, 40);
+        examInfoArea.setFont(fieldFont);
+        examInfoArea.setEditable(false);
+        examInfoArea.setBackground(new Color(250, 250, 250));
+        examInfoArea.setLineWrap(true);
+        examInfoArea.setWrapStyleWord(true);
+        JScrollPane examScroll = new JScrollPane(examInfoArea);
+        examScroll.setPreferredSize(new Dimension(500, 120));
+        examPanel.add(examLabel, BorderLayout.NORTH);
+        examPanel.add(examScroll, BorderLayout.CENTER);
+
+        // 诊断报告
         JPanel summaryPanel = new JPanel(new BorderLayout(10, 5));
         summaryPanel.setBackground(Color.WHITE);
         JLabel summaryLabel = new JLabel("诊断报告：");
         summaryLabel.setFont(labelFont);
-        summaryArea = new JTextArea(8, 40);
+        summaryArea = new JTextArea(6, 40);
         summaryArea.setFont(fieldFont);
         summaryArea.setLineWrap(true);
         summaryArea.setWrapStyleWord(true);
         JScrollPane summaryScroll = new JScrollPane(summaryArea);
-        summaryScroll.setPreferredSize(new Dimension(500, 200));
+        summaryScroll.setPreferredSize(new Dimension(500, 150));
         summaryPanel.add(summaryLabel, BorderLayout.NORTH);
         summaryPanel.add(summaryScroll, BorderLayout.CENTER);
 
         panel.add(apptPanel);
-        panel.add(Box.createRigidArea(new Dimension(0, 15)));
+        panel.add(Box.createRigidArea(new Dimension(0, 10)));
+        panel.add(examPanel);
+        panel.add(Box.createRigidArea(new Dimension(0, 10)));
         panel.add(summaryPanel);
 
         return panel;
@@ -113,9 +143,8 @@ public class ReportEditDialog extends JDialog {
         }
     }
 
-    /** 用户切换下拉框选中项时，自动加载该预约的已有报告 */
     private void onAppointmentSelected() {
-        if (fixedAppointmentId != null || existingReport != null) return; // 固定预约模式不切换
+        if (fixedAppointmentId != null || existingReport != null) return;
         int idx = appointmentCombo.getSelectedIndex();
         if (idx < 0 || idx >= availableAppointments.size()) return;
         Appointment selected = availableAppointments.get(idx);
@@ -125,6 +154,29 @@ public class ReportEditDialog extends JDialog {
         } else {
             summaryArea.setText("");
         }
+        loadExamInfo(selected.getId());
+    }
+
+    private void loadExamInfo(Long appointmentId) {
+        List<ExamRecord> records = examRecordDAO.getExamRecordsByAppointment(appointmentId);
+        if (records.isEmpty()) {
+            examInfoArea.setText("暂无检查结果");
+            return;
+        }
+        StringBuilder sb = new StringBuilder();
+        for (ExamRecord r : records) {
+            sb.append("● ").append(r.getItemName() != null ? r.getItemName() : "项目#" + r.getItemId())
+              .append("：").append(r.getResultValue() != null ? r.getResultValue() : "-");
+            if (r.getIsAbnormal() != null && r.getIsAbnormal()) {
+                sb.append(" 【异常】");
+            }
+            if (r.getDoctorNote() != null && !r.getDoctorNote().isEmpty()) {
+                sb.append(" （").append(r.getDoctorNote()).append("）");
+            }
+            sb.append("\n");
+        }
+        examInfoArea.setText(sb.toString());
+        examInfoArea.setCaretPosition(0);
     }
 
     private void selectAppointmentInCombo(Long appointmentId) {
@@ -154,12 +206,55 @@ public class ReportEditDialog extends JDialog {
             }
         });
 
+        JButton exportBtn = CrudPanel.createStyledButton("导出Word", new Color(153, 204, 255));
+        exportBtn.addActionListener(e -> exportToWord());
+
         JButton cancelBtn = CrudPanel.createStyledButton("取消", new Color(200, 200, 200));
         cancelBtn.addActionListener(e -> dispose());
 
         panel.add(saveBtn);
+        panel.add(exportBtn);
         panel.add(cancelBtn);
         return panel;
+    }
+
+    private void exportToWord() {
+        Appointment selected = getSelectedAppointment();
+        if (selected == null) {
+            JOptionPane.showMessageDialog(this, "请先选择关联预约", "提示", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        JFileChooser chooser = new JFileChooser();
+        chooser.setDialogTitle("导出Word报告");
+        String defaultName = "报告_" + selected.getUserName() + "_" + selected.getGroupName() + ".docx";
+        chooser.setSelectedFile(new File(defaultName));
+        if (chooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) return;
+
+        String filePath = chooser.getSelectedFile().getAbsolutePath();
+        if (!filePath.toLowerCase().endsWith(".docx")) filePath += ".docx";
+
+        try {
+            CheckItemGroup group = appointmentService.getCheckGroupByAppointmentId(selected.getId());
+            List<CheckItem> items = appointmentService.getCheckItemsByAppointmentId(selected.getId());
+            List<ExamRecord> records = examRecordDAO.getExamRecordsByAppointment(selected.getId());
+
+            WordExportService exporter = new WordExportService();
+            exporter.exportReportWithResults(filePath, selected, group, items, records, summaryArea.getText().trim());
+
+            JOptionPane.showMessageDialog(this, "报告导出成功！\n" + filePath, "导出成功", JOptionPane.INFORMATION_MESSAGE);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, "导出失败：" + ex.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private Appointment getSelectedAppointment() {
+        int idx = appointmentCombo.getSelectedIndex();
+        if (idx >= 0 && idx < availableAppointments.size()) {
+            return availableAppointments.get(idx);
+        }
+        return null;
     }
 
     private boolean saveReport() {
@@ -180,11 +275,9 @@ public class ReportEditDialog extends JDialog {
             return false;
         }
 
-        // 查找该预约是否已有报告
         Report existing = reportDAO.getByAppointmentId(appointmentId);
 
         if (existingReport != null) {
-            // 编辑模式：更新已有报告
             existingReport.setSummary(summary);
             if (reportDAO.update(existingReport)) {
                 JOptionPane.showMessageDialog(this, "报告更新成功", "成功", JOptionPane.INFORMATION_MESSAGE);
@@ -194,7 +287,6 @@ public class ReportEditDialog extends JDialog {
                 return false;
             }
         } else if (existing != null) {
-            // 撰写模式但该预约已有报告 → 自动转为更新
             existing.setSummary(summary);
             if (reportDAO.update(existing)) {
                 JOptionPane.showMessageDialog(this, "报告更新成功", "成功", JOptionPane.INFORMATION_MESSAGE);
@@ -204,7 +296,6 @@ public class ReportEditDialog extends JDialog {
                 return false;
             }
         } else {
-            // 新建报告
             Report report = new Report();
             report.setAppointmentId(appointmentId);
             report.setDoctorId(doctorId);

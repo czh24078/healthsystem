@@ -1,13 +1,10 @@
 package com.healthsys.ui.user;
 
-import com.healthsys.common.entity.Appointment;
 import com.healthsys.common.entity.Users;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Date;
 
 public class MainView {
@@ -23,6 +20,7 @@ public class MainView {
     // 模块视图实例
     private final JPanel homePanel;
     private final AppointmentView appointmentView;
+    private ExamRecordView examRecordView;
 
     public MainView(Users currentUser) {
         this.currentUser = currentUser;
@@ -77,8 +75,7 @@ public class MainView {
 
         // 导航按钮
         addNavButton("首页", "home.png", () -> showPanel("home"));
-        addNavButton("预约", "message.png", () -> showPanel("groups"));
-        addNavButton("自定义检查组", "package_customize.png", () -> showPanel("customPackage"));
+        addNavButton("预约检查", "message.png", () -> showPanel("groups"));
         addNavButton("我的预约", "calendar.png", () -> showPanel("appointments"));
         addNavButton("体检信息", "health.png", () -> showPanel("checkupInfo"));
         addNavButton("关于", "info.png", () -> showPanel("about"));
@@ -126,13 +123,6 @@ public class MainView {
         appointmentPanel.setName("appointments");
         rightPanel.add(appointmentPanel, "appointments");
 
-        // 创建自定义检查组面板
-        CustomPackageView customPackageView = new CustomPackageView(currentUser);
-        JPanel customPackagePanel = customPackageView.getCustomPackagePanel();
-        customPackagePanel.setName("customPackage");
-        rightPanel.add(customPackagePanel, "customPackage");
-
-
         // 添加about面板
         JPanel aboutPanel = aboutView.getAboutPanel();
         aboutPanel.setName("about");
@@ -148,14 +138,9 @@ public class MainView {
         JPanel checkupInfoPanel = new JPanel(new BorderLayout());
         checkupInfoPanel.setName("checkupInfo");
 
-        if (currentUser != null && currentUser.getId() > 0) {
+        examRecordView = new ExamRecordView(currentUser);
+        checkupInfoPanel.add(examRecordView.getHealthPanel(), BorderLayout.CENTER);
 
-            Appointment dummyAppointment = new Appointment(currentUser.getId(), 0L, LocalDateTime.now());
-            ExamRecordView examRecordView = new ExamRecordView(dummyAppointment);
-            checkupInfoPanel.add(examRecordView.getHealthPanel(), BorderLayout.CENTER);
-        } else {
-            checkupInfoPanel.add(new JLabel("暂无体检记录", JLabel.CENTER));
-        }
         rightPanel.add(checkupInfoPanel, "checkupInfo");
 
 
@@ -200,14 +185,21 @@ public class MainView {
         cl.show(rightPanel, panelName);
         updateWindowTitle(panelName);
         updateStatusBar();
+
+        // 切换面板时自动刷新数据
+        if ("appointments".equals(panelName)) {
+            appointmentView.refreshAppointmentData();
+        }
+        if ("checkupInfo".equals(panelName) && examRecordView != null) {
+            examRecordView.refreshData();
+        }
     }
 
     private void updateWindowTitle(String panelName) {
         String title = switch (panelName) {
             case "home" -> "首页";
-            case "groups" -> "预约";
+            case "groups" -> "预约检查";
             case "appointments" -> "我的预约";
-            case "customPackage" -> "自定义检查组";
             case "checkupInfo" -> "体检信息";
             case "about" -> "关于";
             default -> "";
@@ -233,9 +225,8 @@ public class MainView {
                 if (name != null) {
                     return switch (name) {
                         case "home" -> "首页";
-                        case "groups" -> "预约";
+                        case "groups" -> "预约检查";
                         case "appointments" -> "我的预约";
-                        case "customPackage" -> "自定义检查组";
                         case "checkupInfo" -> "体检信息";
                         case "about" -> "关于";
                         default -> "";

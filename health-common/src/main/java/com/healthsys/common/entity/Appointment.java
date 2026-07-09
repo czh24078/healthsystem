@@ -20,6 +20,7 @@ public class Appointment {
     private String userName;
     private String groupName;
     private String doctorName;
+    private Boolean hasReport;  // 是否已撰写报告（LEFT JOIN reports）
 
     public Appointment() {}
 
@@ -86,6 +87,10 @@ public class Appointment {
 
     public String getDoctorName() { return doctorName; }
     public void setDoctorName(String doctorName) { this.doctorName = doctorName; }
+
+    public Boolean getHasReport() { return hasReport; }
+    public void setHasReport(Boolean hasReport) { this.hasReport = hasReport; }
+    public String getHasReportDisplay() { return Boolean.TRUE.equals(hasReport) ? "已撰写" : "未撰写"; }
 
     // 兼容旧代码的别名方法
     public Long getId() { return appointmentId; }

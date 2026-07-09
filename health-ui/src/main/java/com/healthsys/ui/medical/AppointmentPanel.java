@@ -203,38 +203,70 @@ public class AppointmentPanel extends CrudPanel<Appointment> {
             }
         });
 
-        // 列: 用户, 检查组, 检查日期, 时段, 状态, 支付
-        int[] widths = {80, 160, 100, 60, 70, 70};
+        // 列: 用户, 检查组, 检查日期, 时段, 状态, 支付, 报告
+        int[] widths = {70, 150, 95, 50, 65, 60, 65};
         for (int i = 0; i < widths.length; i++) {
             TableColumn col = table.getColumnModel().getColumn(i);
             col.setPreferredWidth(widths[i]);
         }
         table.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
 
+        // 报告列颜色渲染
+        table.getColumnModel().getColumn(6).setCellRenderer(new DefaultTableCellRenderer() {
+            private final Color REPORTED_BG = new Color(232, 245, 233);
+            private final Color REPORTED_FG = new Color(46, 125, 50);
+            private final Color UNREPORTED_BG = new Color(255, 243, 224);
+            private final Color UNREPORTED_FG = new Color(230, 81, 0);
+
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value,
+                    boolean isSelected, boolean hasFocus, int row, int col) {
+                JLabel lbl = (JLabel) super.getTableCellRendererComponent(
+                        table, value, isSelected, hasFocus, row, col);
+                lbl.setHorizontalAlignment(SwingConstants.CENTER);
+                lbl.setFont(new Font("微软雅黑", Font.BOLD, 12));
+                if (!isSelected) {
+                    if ("已撰写".equals(value)) {
+                        lbl.setBackground(REPORTED_BG);
+                        lbl.setForeground(REPORTED_FG);
+                    } else {
+                        lbl.setBackground(UNREPORTED_BG);
+                        lbl.setForeground(UNREPORTED_FG);
+                    }
+                }
+                lbl.setBorder(BorderFactory.createEmptyBorder(2, 8, 2, 8));
+                return lbl;
+            }
+        });
+
         // 快速分类按钮
         JPanel quickFilterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 2));
         JButton pendingBtn = new JButton("待检查");
-        JButton completedBtn = new JButton("已完成");
+        JButton reportedBtn = new JButton("已撰写报告");
+        JButton unreportedBtn = new JButton("未撰写报告");
         JButton cancelledBtn = new JButton("已取消");
         JButton allBtn = new JButton("全部");
         Font ff = new Font("微软雅黑", Font.BOLD, 12);
-        for (JButton btn : new JButton[]{pendingBtn, completedBtn, cancelledBtn, allBtn}) {
+        for (JButton btn : new JButton[]{pendingBtn, reportedBtn, unreportedBtn, cancelledBtn, allBtn}) {
             btn.setFont(ff); btn.setFocusPainted(false);
-            btn.setPreferredSize(new Dimension(80, 28));
+            btn.setPreferredSize(new Dimension(95, 28));
         }
         pendingBtn.setBackground(new Color(255, 193, 7)); pendingBtn.setForeground(Color.BLACK);
-        completedBtn.setBackground(new Color(76, 175, 80)); completedBtn.setForeground(Color.BLACK);
+        reportedBtn.setBackground(new Color(76, 175, 80)); reportedBtn.setForeground(Color.BLACK);
+        unreportedBtn.setBackground(new Color(255, 152, 0)); unreportedBtn.setForeground(Color.BLACK);
         cancelledBtn.setBackground(new Color(158, 158, 158)); cancelledBtn.setForeground(Color.BLACK);
         allBtn.setBackground(new Color(70, 104, 197)); allBtn.setForeground(Color.BLACK);
 
         pendingBtn.addActionListener(e -> { quickStatusFilter = "PENDING"; refreshData(); });
-        completedBtn.addActionListener(e -> { quickStatusFilter = "COMPLETED"; refreshData(); });
+        reportedBtn.addActionListener(e -> { quickStatusFilter = "REPORTED"; refreshData(); });
+        unreportedBtn.addActionListener(e -> { quickStatusFilter = "UNREPORTED"; refreshData(); });
         cancelledBtn.addActionListener(e -> { quickStatusFilter = "CANCELLED"; refreshData(); });
         allBtn.addActionListener(e -> { quickStatusFilter = null; refreshData(); });
 
         quickFilterPanel.add(allBtn);
         quickFilterPanel.add(pendingBtn);
-        quickFilterPanel.add(completedBtn);
+        quickFilterPanel.add(reportedBtn);
+        quickFilterPanel.add(unreportedBtn);
         quickFilterPanel.add(cancelledBtn);
 
         JScrollPane scrollPane = new JScrollPane(table);
@@ -249,7 +281,19 @@ public class AppointmentPanel extends CrudPanel<Appointment> {
     @Override
     public void refreshData() {
         LocalDate today = LocalDate.now();
-        List<Appointment> result = appointmentDAO.searchByFilters(doctorId, today.minusDays(30), today, quickStatusFilter);
+        String daoStatus = null;
+        // "REPORTED" / "UNREPORTED" 不是数据库状态，需查全部 COMPLETED 再在内存中过滤
+        if ("REPORTED".equals(quickStatusFilter) || "UNREPORTED".equals(quickStatusFilter)) {
+            daoStatus = "COMPLETED";
+        } else {
+            daoStatus = quickStatusFilter;
+        }
+        List<Appointment> result = appointmentDAO.searchByFilters(doctorId, today.minusDays(30), today, daoStatus);
+        if ("REPORTED".equals(quickStatusFilter)) {
+            result = result.stream().filter(a -> Boolean.TRUE.equals(a.getHasReport())).toList();
+        } else if ("UNREPORTED".equals(quickStatusFilter)) {
+            result = result.stream().filter(a -> !Boolean.TRUE.equals(a.getHasReport())).toList();
+        }
         tableModel.setData(result);
         tableModel.fireTableDataChanged();
     }
@@ -263,7 +307,7 @@ public class AppointmentPanel extends CrudPanel<Appointment> {
     }
 
     private class AppointmentTableModel extends AbstractTableModel {
-        private String[] columnNames = {"用户", "检查组", "检查日期", "时段", "状态", "支付"};
+        private String[] columnNames = {"用户", "检查组", "检查日期", "时段", "状态", "支付", "报告"};
         private List<Appointment> data;
 
         public void setData(List<Appointment> data) {
@@ -288,6 +332,7 @@ public class AppointmentPanel extends CrudPanel<Appointment> {
                 case 3 -> a.getExamTimeSlot() != null ? a.getExamTimeSlot() : "";
                 case 4 -> a.getStatusDisplay();
                 case 5 -> a.getPaymentStatusDisplay();
+                case 6 -> a.getHasReportDisplay();
                 default -> null;
             };
         }

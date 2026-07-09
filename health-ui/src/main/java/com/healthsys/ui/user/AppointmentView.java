@@ -2,12 +2,16 @@
 package com.healthsys.ui.user;
 
 import com.healthsys.service.AppointmentService;
+import com.healthsys.service.ExamService;
 import com.healthsys.service.MockPaymentService;
 import com.healthsys.service.PaymentService;
 import com.healthsys.common.entity.Appointment;
+import com.healthsys.common.entity.ExamRecord;
+import com.healthsys.common.entity.Report;
 import com.healthsys.common.entity.Users;
 import com.healthsys.common.entity.CheckItemGroup;
 import com.healthsys.common.entity.CheckItem;
+import com.healthsys.dao.ReportDAO;
 import com.toedter.calendar.JDateChooser;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -27,6 +31,9 @@ public class AppointmentView {
     private JTable appointmentTable;
     private DefaultTableModel tableModel;
     private String currentFilter = "PENDING"; // 默认显示未处理
+
+    private final ExamService examService = new ExamService();
+    private final ReportDAO reportDAO = new ReportDAO();
 
     public AppointmentView(Users currentUser) {
         this.currentUser = currentUser;
@@ -150,174 +157,7 @@ public class AppointmentView {
         }
     }
 
-    private void showNewAppointmentDialog(ActionEvent e) {
-        JDialog dialog = new JDialog();
-        dialog.setTitle("新建体检预约");
-        dialog.setSize(800, 600);
-        dialog.setLocationRelativeTo(appointmentPanel);
-        dialog.setModal(true);
 
-        // 自定义检查组面板
-        JPanel customGroupPanel = createCustomGroupPanel(dialog);
-        dialog.add(customGroupPanel);
-        dialog.setVisible(true);
-    }
-
-    private JPanel createCustomGroupPanel(JDialog parentDialog) {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-
-        // 标题
-        JLabel titleLabel = new JLabel("自定义检查组", JLabel.CENTER);
-        titleLabel.setFont(new Font("微软雅黑", Font.BOLD, 18));
-        panel.add(titleLabel, BorderLayout.NORTH);
-
-        // 左侧所有检查项目列表
-        JPanel leftPanel = new JPanel(new BorderLayout());
-        leftPanel.setBorder(BorderFactory.createTitledBorder("可选检查项目"));
-
-        // 右侧已选检查项目列表
-        JPanel rightPanel = new JPanel(new BorderLayout());
-        rightPanel.setBorder(BorderFactory.createTitledBorder("已选检查项目"));
-
-        // 示例：双列表拖拽或按钮添加/移除
-        DefaultListModel<CheckItem> availableModel = new DefaultListModel<>();
-        DefaultListModel<CheckItem> selectedModel = new DefaultListModel<>();
-
-        JList<CheckItem> availableList = new JList<>(availableModel);
-        JList<CheckItem> selectedList = new JList<>(selectedModel);
-
-        // 加载所有可用的检查项目
-        List<CheckItem> allTests = controller.getAllTests();
-        allTests.forEach(availableModel::addElement);
-
-        // 添加按钮
-        JButton addButton = new JButton(">>");
-        JButton removeButton = new JButton("<<");
-
-        // 价格计算标签
-        JLabel totalPriceLabel = new JLabel("总价: ¥0.00");
-        totalPriceLabel.setFont(new Font("宋体", Font.BOLD, 16));
-
-        // 计算总价格的方法
-        Runnable calculateTotalPrice = () -> {
-            double totalPrice = 0.0;
-            for (int i = 0; i < selectedModel.getSize(); i++) {
-                CheckItem test = selectedModel.getElementAt(i);
-                totalPrice += test.getPrice();
-            }
-            totalPriceLabel.setText(String.format("总价: ¥%.2f", totalPrice));
-        };
-
-        // 添加按钮点击事件
-        addButton.addActionListener(e -> {
-            CheckItem selected = availableList.getSelectedValue();
-            if (selected != null) {
-                availableModel.removeElement(selected);
-                selectedModel.addElement(selected);
-                calculateTotalPrice.run();
-            }
-        });
-
-        // 移除按钮点击事件
-        removeButton.addActionListener(e -> {
-            CheckItem selected = selectedList.getSelectedValue();
-            if (selected != null) {
-                selectedModel.removeElement(selected);
-                availableModel.addElement(selected);
-                calculateTotalPrice.run();
-            }
-        });
-
-        // 下方输入框：检查组名称、描述、价格等
-        JPanel inputPanel = new JPanel(new GridLayout(0, 2));
-        JTextField nameField = new JTextField();
-        JTextArea descArea = new JTextArea();
-        JTextField priceField = new JTextField();
-
-        // 价格自动计算
-        priceField.setEditable(false); // 使价格字段不可编辑，由系统自动计算
-
-        inputPanel.add(new JLabel("检查组名称:"));
-        inputPanel.add(nameField);
-        inputPanel.add(new JLabel("描述:"));
-        inputPanel.add(new JScrollPane(descArea));
-        inputPanel.add(new JLabel("价格:"));
-        inputPanel.add(priceField);
-
-        // 提交按钮
-        JButton submitBtn = new JButton("提交检查组");
-        submitBtn.addActionListener(e -> {
-            // 验证输入
-            if (nameField.getText().trim().isEmpty()) {
-                JOptionPane.showMessageDialog(parentDialog, "请输入检查组名称", "错误", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-
-            if (selectedModel.getSize() == 0) {
-                JOptionPane.showMessageDialog(parentDialog, "请至少选择一个检查项目", "错误", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-
-            // 计算总价
-            double totalPrice = 0.0;
-            for (int i = 0; i < selectedModel.getSize(); i++) {
-                CheckItem test = selectedModel.getElementAt(i);
-                totalPrice += test.getPrice();
-            }
-
-            CheckItemGroup newGroup = new CheckItemGroup();
-            newGroup.setName(nameField.getText());
-            newGroup.setDescription(descArea.getText());
-            newGroup.setPrice(totalPrice);
-
-            List<Long> selectedTestIds = new ArrayList<>();
-            for (int i = 0; i < selectedModel.getSize(); i++) {
-                CheckItem test = selectedModel.getElementAt(i);
-                selectedTestIds.add(test.getId());
-            }
-
-            if (controller.createCustomGroup(newGroup, selectedTestIds)) {
-                JOptionPane.showMessageDialog(parentDialog, "检查组创建成功！");
-
-                // 显示预约时间选择对话框
-                showTimeSelectionDialog(newGroup.getId(), null, parentDialog);
-
-                parentDialog.dispose();
-                // 刷新预约表格
-                refreshAppointmentData();
-            } else {
-                JOptionPane.showMessageDialog(parentDialog, "检查组创建失败！", "错误", JOptionPane.ERROR_MESSAGE);
-            }
-        });
-
-        // 组装面板
-        JPanel buttonPanel = new JPanel(new FlowLayout());
-        buttonPanel.add(addButton);
-        buttonPanel.add(removeButton);
-
-        // 添加价格显示面板
-        JPanel pricePanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        pricePanel.add(totalPriceLabel);
-
-        leftPanel.add(new JScrollPane(availableList), BorderLayout.CENTER);
-        rightPanel.add(new JScrollPane(selectedList), BorderLayout.CENTER);
-
-        JPanel centerPanel = new JPanel(new GridLayout(1, 2));
-        centerPanel.add(leftPanel);
-        centerPanel.add(rightPanel);
-
-        JPanel mainPanel = new JPanel(new BorderLayout());
-        mainPanel.add(centerPanel, BorderLayout.CENTER);
-        mainPanel.add(pricePanel, BorderLayout.NORTH);
-        mainPanel.add(inputPanel, BorderLayout.SOUTH);
-        mainPanel.add(buttonPanel, BorderLayout.EAST);
-
-        panel.add(mainPanel, BorderLayout.CENTER);
-        panel.add(submitBtn, BorderLayout.SOUTH);
-
-        return panel;
-    }
 
     private void showTimeSelectionDialog(Long groupId, Long testId, JDialog parentDialog) {
         JDialog timeDialog = new JDialog(parentDialog, "选择预约时间", true);
@@ -474,59 +314,7 @@ public class AppointmentView {
         }
     }
 
-    // 检查组表格按钮编辑器
-    class GroupButtonEditor extends DefaultCellEditor {
-        private String label;
-        private JDialog parentDialog;
 
-        public GroupButtonEditor(JCheckBox checkBox, JDialog parentDialog) {
-            super(checkBox);
-            this.parentDialog = parentDialog;
-        }
-
-        public Component getTableCellEditorComponent(JTable table, Object value,
-                                                     boolean isSelected, int row, int column) {
-            label = (value == null) ? "" : value.toString();
-            JButton button = new JButton(label);
-            button.addActionListener(e -> {
-                Long groupId = (Long) table.getValueAt(row, 0);
-                showTimeSelectionDialog(groupId, null, parentDialog);
-                fireEditingStopped();
-            });
-            return button;
-        }
-
-        public Object getCellEditorValue() {
-            return label;
-        }
-    }
-
-    // 项目表格按钮编辑器
-    class TestButtonEditor extends DefaultCellEditor {
-        private String label;
-        private JDialog parentDialog;
-
-        public TestButtonEditor(JCheckBox checkBox, JDialog parentDialog) {
-            super(checkBox);
-            this.parentDialog = parentDialog;
-        }
-
-        public Component getTableCellEditorComponent(JTable table, Object value,
-                                                     boolean isSelected, int row, int column) {
-            label = (value == null) ? "" : value.toString();
-            JButton button = new JButton(label);
-            button.addActionListener(e -> {
-                Long testId = (Long) table.getValueAt(row, 0);
-                showTimeSelectionDialog(null, testId, parentDialog);
-                fireEditingStopped();
-            });
-            return button;
-        }
-
-        public Object getCellEditorValue() {
-            return label;
-        }
-    }
 
     public JPanel getAppointmentPanel() {
         return appointmentPanel;
@@ -601,7 +389,15 @@ public class AppointmentView {
         CheckItemGroup group = groupId != null ? controller.getCheckItemGroupById(groupId) : null;
         List<CheckItem> items = groupId != null ? controller.getCheckItemsByGroupId(groupId) : new ArrayList<>();
 
-        AppointmentDetailDialog dialog = new AppointmentDetailDialog(appointment, group, items);
+        // 已处理预约：额外加载检查结果和报告
+        List<ExamRecord> examRecords = new ArrayList<>();
+        Report report = null;
+        if ("COMPLETED".equals(appointment.getStatus())) {
+            examRecords = examService.getExamRecordsByAppointment(appointmentId);
+            report = reportDAO.getByAppointmentId(appointmentId);
+        }
+
+        AppointmentDetailDialog dialog = new AppointmentDetailDialog(appointment, group, items, examRecords, report);
         dialog.setLocationRelativeTo(appointmentPanel);
         dialog.setVisible(true);
     }
@@ -739,155 +535,6 @@ public class AppointmentView {
         }
     }
 
-    private void showCustomPackageDialog() {
-        JDialog dialog = new JDialog();
-        dialog.setTitle("自定义检查组");
-        dialog.setSize(800, 600);
-        dialog.setLocationRelativeTo(appointmentPanel);
-        dialog.setModal(true);
-
-        JPanel panel = new JPanel(new BorderLayout());
-
-        // 左侧所有检查项目列表
-        JPanel leftPanel = new JPanel(new BorderLayout());
-        leftPanel.setBorder(BorderFactory.createTitledBorder("可选检查项目"));
-
-        // 右侧已选检查项目列表
-        JPanel rightPanel = new JPanel(new BorderLayout());
-        rightPanel.setBorder(BorderFactory.createTitledBorder("已选检查项目"));
-
-        // 示例：双列表拖拽或按钮添加/移除
-        DefaultListModel<CheckItem> availableModel = new DefaultListModel<>();
-        DefaultListModel<CheckItem> selectedModel = new DefaultListModel<>();
-
-        JList<CheckItem> availableList = new JList<>(availableModel);
-        JList<CheckItem> selectedList = new JList<>(selectedModel);
-
-        // 加载所有可用的检查项目
-        List<CheckItem> allTests = controller.getAllTests();
-        allTests.forEach(availableModel::addElement);
-
-        // 添加按钮
-        JButton addButton = new JButton(">>");
-        JButton removeButton = new JButton("<<");
-
-        // 价格计算标签
-        JLabel totalPriceLabel = new JLabel("总价: ¥0.00");
-        totalPriceLabel.setFont(new Font("宋体", Font.BOLD, 16));
-
-        // 计算总价格的方法
-        Runnable calculateTotalPrice = () -> {
-            double totalPrice = 0.0;
-            for (int i = 0; i < selectedModel.getSize(); i++) {
-                CheckItem test = selectedModel.getElementAt(i);
-                totalPrice += test.getPrice();
-            }
-            totalPriceLabel.setText(String.format("总价: ¥%.2f", totalPrice));
-        };
-
-        // 添加按钮点击事件
-        addButton.addActionListener(e -> {
-            CheckItem selected = availableList.getSelectedValue();
-            if (selected != null) {
-                availableModel.removeElement(selected);
-                selectedModel.addElement(selected);
-                calculateTotalPrice.run();
-            }
-        });
-
-        // 移除按钮点击事件
-        removeButton.addActionListener(e -> {
-            CheckItem selected = selectedList.getSelectedValue();
-            if (selected != null) {
-                selectedModel.removeElement(selected);
-                availableModel.addElement(selected);
-                calculateTotalPrice.run();
-            }
-        });
-
-        // 下方输入框：检查组名称、描述、价格等
-        JPanel inputPanel = new JPanel(new GridLayout(0, 2));
-        JTextField nameField = new JTextField();
-        JTextArea descArea = new JTextArea();
-        JTextField priceField = new JTextField();
-
-        // 价格自动计算
-        priceField.setEditable(false); // 使价格字段不可编辑，由系统自动计算
-
-        inputPanel.add(new JLabel("检查组名称:"));
-        inputPanel.add(nameField);
-        inputPanel.add(new JLabel("描述:"));
-        inputPanel.add(new JScrollPane(descArea));
-        inputPanel.add(new JLabel("价格:"));
-        inputPanel.add(priceField);
-
-        // 提交按钮
-        JButton submitBtn = new JButton("提交检查组");
-        submitBtn.addActionListener(e -> {
-            // 验证输入
-            if (nameField.getText().trim().isEmpty()) {
-                JOptionPane.showMessageDialog(dialog, "请输入检查组名称", "错误", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-
-            if (selectedModel.getSize() == 0) {
-                JOptionPane.showMessageDialog(dialog, "请至少选择一个检查项目", "错误", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-
-            // 计算总价
-            double totalPrice = 0.0;
-            for (int i = 0; i < selectedModel.getSize(); i++) {
-                CheckItem test = selectedModel.getElementAt(i);
-                totalPrice += test.getPrice();
-            }
-
-            CheckItemGroup newGroup = new CheckItemGroup();
-            newGroup.setName(nameField.getText());
-            newGroup.setDescription(descArea.getText());
-            newGroup.setPrice(totalPrice);
-
-            List<Long> selectedTestIds = new ArrayList<>();
-            for (int i = 0; i < selectedModel.getSize(); i++) {
-                CheckItem test = selectedModel.getElementAt(i);
-                selectedTestIds.add(test.getId());
-            }
-
-            if (controller.createCustomGroup(newGroup, selectedTestIds)) {
-                JOptionPane.showMessageDialog(dialog, "检查组创建成功！");
-                dialog.dispose();
-                // 刷新预约表格
-                refreshAppointmentData();
-            } else {
-                JOptionPane.showMessageDialog(dialog, "检查组创建失败！", "错误", JOptionPane.ERROR_MESSAGE);
-            }
-        });
-
-        // 组装面板
-        JPanel buttonPanel = new JPanel(new FlowLayout());
-        buttonPanel.add(addButton);
-        buttonPanel.add(removeButton);
-
-        // 添加价格显示面板
-        JPanel pricePanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        pricePanel.add(totalPriceLabel);
-
-        leftPanel.add(new JScrollPane(availableList), BorderLayout.CENTER);
-        rightPanel.add(new JScrollPane(selectedList), BorderLayout.CENTER);
-
-        JPanel centerPanel = new JPanel(new GridLayout(1, 2));
-        centerPanel.add(leftPanel);
-        centerPanel.add(rightPanel);
-
-        panel.add(centerPanel, BorderLayout.CENTER);
-        panel.add(pricePanel, BorderLayout.NORTH);
-        panel.add(inputPanel, BorderLayout.SOUTH);
-        panel.add(buttonPanel, BorderLayout.EAST);
-        panel.add(submitBtn, BorderLayout.PAGE_END);
-
-        dialog.add(panel);
-        dialog.setVisible(true);
-    }
 
     private void showPaymentDialog(Long appointmentId) {
         JDialog paymentDialog = new JDialog();
