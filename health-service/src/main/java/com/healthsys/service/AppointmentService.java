@@ -44,6 +44,15 @@ public class AppointmentService {
         return appointmentDAO.createAppointment(appointment);
     }
 
+    // 新版：支持选择医生
+    public boolean createAppointment(Users user, Long groupId, java.util.Date appointmentTime, Long doctorId) {
+        LocalDateTime ldt = appointmentTime.toInstant().atZone(java.time.ZoneId.of("UTC")).toLocalDateTime();
+        Appointment appointment = new Appointment(user.getId(), groupId, ldt);
+        appointment.setExamDate(ldt.toLocalDate());
+        appointment.setDoctorId(doctorId);
+        return appointmentDAO.createAppointment(appointment);
+    }
+
     // 兼容旧版：用java.util.Date（转为LocalDateTime作为预约时间）
     public boolean createAppointment(Users user, Long groupId, java.util.Date appointmentTime) {
         LocalDateTime ldt = appointmentTime.toInstant().atZone(java.time.ZoneId.of("UTC")).toLocalDateTime();

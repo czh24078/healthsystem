@@ -130,7 +130,7 @@ public class MessagesView {
 
     private void showTimeSelectionDialog(Long groupId) {
         JDialog timeDialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(messagesPanel), "选择预约时间", true);
-        timeDialog.setSize(400, 250);
+        timeDialog.setSize(420, 330);
         timeDialog.setLocationRelativeTo(messagesPanel);
 
         JPanel panel = new JPanel(new GridBagLayout());
@@ -159,13 +159,27 @@ public class MessagesView {
         gbc.gridx = 1;
         panel.add(timeCombo, gbc);
 
+        // 医生选择
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        panel.add(new JLabel("选择医生:"), gbc);
+
+        java.util.List<com.healthsys.common.entity.Doctor> doctors = new com.healthsys.dao.DoctorDAO().getAll();
+        JComboBox<String> doctorCombo = new JComboBox<>();
+        doctorCombo.addItem("不指定");
+        for (com.healthsys.common.entity.Doctor d : doctors) {
+            doctorCombo.addItem(d.getName() + " - " + d.getDepartment() + " - " + d.getTitle());
+        }
+        gbc.gridx = 1;
+        panel.add(doctorCombo, gbc);
+
         JButton submitBtn = new JButton("确认预约");
         submitBtn.setBackground(new Color(41, 75, 166));
         submitBtn.setForeground(Color.BLACK);
         submitBtn.setFont(new Font("微软雅黑", Font.BOLD, 16));
         submitBtn.setFocusPainted(false);
         gbc.gridx = 0;
-        gbc.gridy = 2;
+        gbc.gridy = 3;
         gbc.gridwidth = 2;
         gbc.anchor = GridBagConstraints.CENTER;
         gbc.ipady = 8;
@@ -193,7 +207,10 @@ public class MessagesView {
 
             Date appointmentTime = Date.from(ldt.atZone(ZoneId.systemDefault()).toInstant());
 
-            if (controller.createAppointment(currentUser, groupId, appointmentTime)) {
+            int doctorIndex = doctorCombo.getSelectedIndex();
+            Long doctorId = doctorIndex > 0 ? doctors.get(doctorIndex - 1).getDoctorId() : null;
+
+            if (controller.createAppointment(currentUser, groupId, appointmentTime, doctorId)) {
                 JOptionPane.showMessageDialog(timeDialog, "预约成功!", "成功", JOptionPane.INFORMATION_MESSAGE);
                 timeDialog.dispose();
                 int payOption = JOptionPane.showConfirmDialog(
