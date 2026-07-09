@@ -1,0 +1,50 @@
+============================================ 
+  Health 1.0 - Debug Log 
+  Time: 2026/07/08 周三 15:18:12.77 
+============================================ 
+ 
+[1] Environment 
+  USERPROFILE=C:\Users\慈曾华 
+  JAVA_HOME= 
+  PATH first javaw: 
+    C:\Program Files\Common Files\Oracle\Java\javapath\javaw.exe 
+ 
+[2] db.properties 
+  Source file: 
+db.url=jdbc:mysql://localhost:3306/healthsys?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8
+db.user=root
+db.password=123456
+  Target file: 
+db.url=jdbc:mysql://localhost:3306/healthsys?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8
+db.user=root
+db.password=123456
+ 
+[3] Maven Detection 
+  Found: C:\Users\慈曾华\.m2\wrapper\dists\apache-maven-3.9.9-bin\33b4b2b4\apache-maven-3.9.9\bin\mvn.cmd 
+ 
+[4] Maven Compile 
+  OK 
+ 
+[5] Classpath 
+  dependency JARs: 
+  C:\Users\鎱堟浘鍗嶾.m2\repository\com\ncu\wan\health-common\1.0-SNAPSHOT\health-common-1.0-SNAPSHOT.jar;C:\Users\鎱堟浘鍗嶾.m2\repository\mysql\mysql-connector-java\8.0.28\mysql-connector-java-8.0.28.jar;C:\Users\鎱堟浘鍗嶾.m2\repository\com\google\protobuf\protobuf-java\3.11.4\protobuf-java-3.11.4.jar;C:\Users\鎱堟浘鍗嶾.m2\repository\com\ncu\wan\health-service\1.0-SNAPSHOT\health-service-1.0-SNAPSHOT.jar;C:\Users\鎱堟浘鍗嶾.m2\repository\com\ncu\wan\health-dao\1.0-SNAPSHOT\health-dao-1.0-SNAPSHOT.jar;C:\Users\鎱堟浘鍗嶾.m2\repository\com\toedter\jcalendar\1.4\jcalendar-1.4.jar 
+ 
+  Target classes: 
+  health-ui\target\classes;health-common\target\classes;health-dao\target\classes;health-service\target\classes 
+  health-ui/target/classes: EXISTS 
+  health-common/target/classes: EXISTS 
+  health-dao/target/classes: EXISTS 
+  health-service/target/classes: EXISTS 
+ 
+  Full classpath: 
+  health-ui\target\classes;health-common\target\classes;health-dao\target\classes;health-service\target\classes;C:\Users\鎱堟浘鍗嶾.m2\repository\com\ncu\wan\health-common\1.0-SNAPSHOT\health-common-1.0-SNAPSHOT.jar;C:\Users\鎱堟浘鍗嶾.m2\repository\mysql\mysql-connector-java\8.0.28\mysql-connector-java-8.0.28.jar;C:\Users\鎱堟浘鍗嶾.m2\repository\com\google\protobuf\protobuf-java\3.11.4\protobuf-java-3.11.4.jar;C:\Users\鎱堟浘鍗嶾.m2\repository\com\ncu\wan\health-service\1.0-SNAPSHOT\health-service-1.0-SNAPSHOT.jar;C:\Users\鎱堟浘鍗嶾.m2\repository\com\ncu\wan\health-dao\1.0-SNAPSHOT\health-dao-1.0-SNAPSHOT.jar;C:\Users\鎱堟浘鍗嶾.m2\repository\com\toedter\jcalendar\1.4\jcalendar-1.4.jar 
+ 
+[6] Diagnostic Query 
+DiagRun.java:13: 错误: 需要')'
+        System.out.println("DIAG:CONN=" + (conn  "NULL")); 
+                                               ^
+1 个错误
+  DiagRun compilation FAILED 
+ 
+[7] Launching application... 
+  Using: java (with console for debug) 

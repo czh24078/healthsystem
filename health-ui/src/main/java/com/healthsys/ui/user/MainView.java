@@ -97,7 +97,7 @@ public class MainView {
         button.setAlignmentX(Component.LEFT_ALIGNMENT);
         button.setMaximumSize(new Dimension(180, 50));
         button.setPreferredSize(new Dimension(180, 50));
-        button.setFont(new Font("微软雅黑", Font.PLAIN, 14));
+        button.setFont(new Font("微软雅黑", Font.BOLD, 14));
         button.setBackground(new Color(90, 124, 217));
         button.setForeground(Color.BLACK);
         button.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
@@ -150,7 +150,7 @@ public class MainView {
 
         if (currentUser != null && currentUser.getId() > 0) {
 
-            Appointment dummyAppointment = new Appointment(currentUser.getId(), null, LocalDateTime.now());
+            Appointment dummyAppointment = new Appointment(currentUser.getId(), 0L, LocalDateTime.now());
             ExamRecordView examRecordView = new ExamRecordView(dummyAppointment);
             checkupInfoPanel.add(examRecordView.getHealthPanel(), BorderLayout.CENTER);
         } else {

@@ -93,6 +93,16 @@ public class DoctorDAO {
         } catch (SQLException e) { e.printStackTrace(); return false; }
     }
 
+    public boolean updatePasswordHash(Long doctorId, String passwordHash) {
+        String sql = "UPDATE doctors SET password_hash = ? WHERE doctor_id = ?";
+        try (Connection conn = DbUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, passwordHash);
+            stmt.setLong(2, doctorId);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) { e.printStackTrace(); return false; }
+    }
+
     public boolean delete(Long id) {
         String sql = "DELETE FROM doctors WHERE doctor_id = ?";
         try (Connection conn = DbUtil.getConnection();

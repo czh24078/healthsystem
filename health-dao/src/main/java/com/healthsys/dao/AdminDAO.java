@@ -73,6 +73,16 @@ public class AdminDAO {
         } catch (SQLException e) { e.printStackTrace(); return false; }
     }
 
+    public boolean updatePasswordHash(Long adminId, String passwordHash) {
+        String sql = "UPDATE admins SET password_hash = ? WHERE admin_id = ?";
+        try (Connection conn = DbUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, passwordHash);
+            stmt.setLong(2, adminId);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) { e.printStackTrace(); return false; }
+    }
+
     public boolean delete(Long id) {
         String sql = "DELETE FROM admins WHERE admin_id = ?";
         try (Connection conn = DbUtil.getConnection();
