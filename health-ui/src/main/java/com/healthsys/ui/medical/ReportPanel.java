@@ -6,6 +6,7 @@ import com.healthsys.dao.ReportDAO;
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableColumn;
 import java.awt.*;
 import java.util.List;
 
@@ -63,27 +64,34 @@ public class ReportPanel extends JPanel {
         tableModel = new ReportTableModel();
         table = new JTable(tableModel);
 
-        table.setFont(new Font("微软雅黑", Font.PLAIN, 13));
+        Font tableFont = new Font("微软雅黑", Font.PLAIN, 14);
+        table.setFont(tableFont);
         table.getTableHeader().setFont(new Font("微软雅黑", Font.BOLD, 14));
-        table.setRowHeight(30);
+        table.setRowHeight(36);
         table.setSelectionBackground(new Color(220, 230, 250));
         table.setSelectionForeground(Color.BLACK);
         table.setGridColor(new Color(220, 220, 220));
         table.getTableHeader().setBackground(new Color(240, 240, 240));
+        table.setShowGrid(true);
+        table.setIntercellSpacing(new Dimension(0, 0));
 
         table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value,
                                                            boolean isSelected, boolean hasFocus, int row, int column) {
-                Component c = super.getTableCellRendererComponent(table, value,
+                super.getTableCellRendererComponent(table, value,
                         isSelected, hasFocus, row, column);
-                if (!isSelected) {
-                    c.setBackground(row % 2 == 0 ? Color.WHITE : new Color(248, 248, 248));
-                }
-                return c;
+                setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
+                return this;
             }
         });
 
+        // 列: 患者, 检查组, 检查日期, 上传时间
+        int[] widths = {80, 180, 100, 150};
+        for (int i = 0; i < widths.length; i++) {
+            TableColumn col = table.getColumnModel().getColumn(i);
+            col.setPreferredWidth(widths[i]);
+        }
         table.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
 
         JScrollPane scrollPane = new JScrollPane(table);
@@ -103,13 +111,11 @@ public class ReportPanel extends JPanel {
     }
 
     private class ReportTableModel extends AbstractTableModel {
-        private final String[] columnNames = {"ID", "患者", "上传时间"};
+        private final String[] columnNames = {"患者", "检查组", "检查日期", "上传时间"};
         private List<Report> data;
 
         public void setData(List<Report> data) { this.data = data; }
-
         public Report getItemAt(int index) { return data.get(index); }
-
         @Override public int getColumnCount() { return columnNames.length; }
         @Override public int getRowCount() { return data == null ? 0 : data.size(); }
         @Override public String getColumnName(int col) { return columnNames[col]; }
@@ -118,9 +124,10 @@ public class ReportPanel extends JPanel {
         public Object getValueAt(int row, int col) {
             Report r = data.get(row);
             return switch (col) {
-                case 0 -> r.getReportId();
-                case 1 -> r.getUserName() != null ? r.getUserName() : "";
-                case 2 -> r.getUploadTime();
+                case 0 -> r.getUserName() != null ? r.getUserName() : "";
+                case 1 -> r.getGroupName() != null ? r.getGroupName() : "";
+                case 2 -> r.getExamDate() != null ? r.getExamDate() : "";
+                case 3 -> r.getUploadTime();
                 default -> null;
             };
         }

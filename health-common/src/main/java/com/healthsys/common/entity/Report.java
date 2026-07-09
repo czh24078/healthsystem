@@ -17,6 +17,8 @@ public class Report {
     // 显示用字段
     private String doctorName;
     private String userName;
+    private String groupName;
+    private java.time.LocalDate examDate;
 
     public Report() {}
 
@@ -47,4 +49,10 @@ public class Report {
 
     public String getUserName() { return userName; }
     public void setUserName(String userName) { this.userName = userName; }
+
+    public String getGroupName() { return groupName; }
+    public void setGroupName(String groupName) { this.groupName = groupName; }
+
+    public java.time.LocalDate getExamDate() { return examDate; }
+    public void setExamDate(java.time.LocalDate examDate) { this.examDate = examDate; }
 }

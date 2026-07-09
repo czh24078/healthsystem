@@ -17,7 +17,7 @@ public class ReportEditDialog extends JDialog {
     private int result = CANCEL_OPTION;
     private final Long doctorId;
     private final Long fixedAppointmentId;
-    private final Report existingReport;
+    private Report existingReport; // 选中预约已有的报告（可为 null）
     private final ReportDAO reportDAO = new ReportDAO();
     private final AppointmentDAO appointmentDAO = new AppointmentDAO();
 
@@ -25,40 +25,33 @@ public class ReportEditDialog extends JDialog {
     private JTextArea summaryArea;
     private List<Appointment> availableAppointments;
 
-    /** 从报告管理页调用：用户自选预约 */
     public ReportEditDialog(Long doctorId, Report existingReport) {
         this(doctorId, null, existingReport);
     }
 
-    /** 从预约页调用：预约已确定 */
     public ReportEditDialog(Long doctorId, Long appointmentId, Report existingReport) {
         this.doctorId = doctorId;
         this.fixedAppointmentId = appointmentId;
         this.existingReport = existingReport;
         setTitle(existingReport == null ? "撰写报告" : "编辑报告");
         setModal(true);
-        setSize(600, 420);
+        setSize(650, 450);
         setLocationRelativeTo(null);
         initUI();
         if (existingReport != null || fixedAppointmentId != null) {
             appointmentCombo.setEnabled(false);
         }
         if (existingReport != null) {
-            loadExistingData();
-        }
-        // 撰写模式下：只显示尚未写过报告的预约
-        if (existingReport == null && fixedAppointmentId == null) {
-            filterOutReported();
+            selectAppointmentInCombo(existingReport.getAppointmentId());
+            loadSummaryFromReport(existingReport);
         }
     }
 
     private void initUI() {
         JPanel mainPanel = new JPanel(new BorderLayout());
         mainPanel.setBackground(Color.WHITE);
-
         mainPanel.add(createFormPanel(), BorderLayout.CENTER);
         mainPanel.add(createButtonPanel(), BorderLayout.SOUTH);
-
         add(mainPanel);
     }
 
@@ -71,7 +64,6 @@ public class ReportEditDialog extends JDialog {
         Font labelFont = new Font("微软雅黑", Font.BOLD, 14);
         Font fieldFont = new Font("微软雅黑", Font.PLAIN, 14);
 
-        // 选择预约
         JPanel apptPanel = new JPanel(new BorderLayout(10, 0));
         apptPanel.setBackground(Color.WHITE);
         apptPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 35));
@@ -80,10 +72,11 @@ public class ReportEditDialog extends JDialog {
         appointmentCombo = new JComboBox<>();
         appointmentCombo.setFont(fieldFont);
         loadAppointments();
+        // 切换预约时自动加载已有报告
+        appointmentCombo.addActionListener(e -> onAppointmentSelected());
         apptPanel.add(apptLabel, BorderLayout.WEST);
         apptPanel.add(appointmentCombo, BorderLayout.CENTER);
 
-        // 诊断总结
         JPanel summaryPanel = new JPanel(new BorderLayout(10, 5));
         summaryPanel.setBackground(Color.WHITE);
         JLabel summaryLabel = new JLabel("诊断报告：");
@@ -113,30 +106,39 @@ public class ReportEditDialog extends JDialog {
         }
         appointmentCombo.removeAllItems();
         for (Appointment a : availableAppointments) {
-            String label = a.getUserName() + " — " + a.getExamDate() + " — " + a.getGroupName();
+            boolean hasReport = reportDAO.getByAppointmentId(a.getId()) != null;
+            String label = a.getUserName() + " — " + a.getExamDate() + " — " + a.getGroupName()
+                    + (hasReport ? "  [已报告]" : "");
             appointmentCombo.addItem(label);
         }
     }
 
-    private void filterOutReported() {
-        appointmentCombo.removeAllItems();
-        availableAppointments.removeIf(a -> reportDAO.getByAppointmentId(a.getId()) != null);
-        for (Appointment a : availableAppointments) {
-            String label = a.getUserName() + " — " + a.getExamDate() + " — " + a.getGroupName();
-            appointmentCombo.addItem(label);
+    /** 用户切换下拉框选中项时，自动加载该预约的已有报告 */
+    private void onAppointmentSelected() {
+        if (fixedAppointmentId != null || existingReport != null) return; // 固定预约模式不切换
+        int idx = appointmentCombo.getSelectedIndex();
+        if (idx < 0 || idx >= availableAppointments.size()) return;
+        Appointment selected = availableAppointments.get(idx);
+        Report r = reportDAO.getByAppointmentId(selected.getId());
+        if (r != null) {
+            loadSummaryFromReport(r);
+        } else {
+            summaryArea.setText("");
         }
     }
 
-    private void loadExistingData() {
-        // 在 combo 中找到对应预约
+    private void selectAppointmentInCombo(Long appointmentId) {
         for (int i = 0; i < availableAppointments.size(); i++) {
-            if (availableAppointments.get(i).getId().equals(existingReport.getAppointmentId())) {
+            if (availableAppointments.get(i).getId().equals(appointmentId)) {
                 appointmentCombo.setSelectedIndex(i);
-                break;
+                return;
             }
         }
-        if (existingReport.getSummary() != null) {
-            summaryArea.setText(existingReport.getSummary());
+    }
+
+    private void loadSummaryFromReport(Report r) {
+        if (r.getSummary() != null) {
+            summaryArea.setText(r.getSummary());
         }
     }
 
@@ -178,13 +180,31 @@ public class ReportEditDialog extends JDialog {
             return false;
         }
 
-        if (existingReport == null) {
-            // 检查是否已有报告
-            Report existing = reportDAO.getByAppointmentId(appointmentId);
-            if (existing != null) {
-                JOptionPane.showMessageDialog(this, "该预约已有报告，不能重复创建", "提示", JOptionPane.WARNING_MESSAGE);
+        // 查找该预约是否已有报告
+        Report existing = reportDAO.getByAppointmentId(appointmentId);
+
+        if (existingReport != null) {
+            // 编辑模式：更新已有报告
+            existingReport.setSummary(summary);
+            if (reportDAO.update(existingReport)) {
+                JOptionPane.showMessageDialog(this, "报告更新成功", "成功", JOptionPane.INFORMATION_MESSAGE);
+                return true;
+            } else {
+                JOptionPane.showMessageDialog(this, "报告更新失败", "错误", JOptionPane.ERROR_MESSAGE);
                 return false;
             }
+        } else if (existing != null) {
+            // 撰写模式但该预约已有报告 → 自动转为更新
+            existing.setSummary(summary);
+            if (reportDAO.update(existing)) {
+                JOptionPane.showMessageDialog(this, "报告更新成功", "成功", JOptionPane.INFORMATION_MESSAGE);
+                return true;
+            } else {
+                JOptionPane.showMessageDialog(this, "报告更新失败", "错误", JOptionPane.ERROR_MESSAGE);
+                return false;
+            }
+        } else {
+            // 新建报告
             Report report = new Report();
             report.setAppointmentId(appointmentId);
             report.setDoctorId(doctorId);
@@ -197,19 +217,16 @@ public class ReportEditDialog extends JDialog {
                 JOptionPane.showMessageDialog(this, "报告保存失败", "错误", JOptionPane.ERROR_MESSAGE);
                 return false;
             }
-        } else {
-            existingReport.setSummary(summary);
-            if (reportDAO.update(existingReport)) {
-                JOptionPane.showMessageDialog(this, "报告更新成功", "成功", JOptionPane.INFORMATION_MESSAGE);
-                return true;
-            } else {
-                JOptionPane.showMessageDialog(this, "报告更新失败", "错误", JOptionPane.ERROR_MESSAGE);
-                return false;
-            }
         }
     }
 
     public int showDialog() {
+        if (fixedAppointmentId == null && availableAppointments.isEmpty()) {
+            JOptionPane.showMessageDialog(getOwner(),
+                "当前没有已完成的预约。\n请先在「预约管理」中完成体检并录入检查结果。",
+                "无可选预约", JOptionPane.INFORMATION_MESSAGE);
+            return CANCEL_OPTION;
+        }
         setVisible(true);
         return result;
     }
