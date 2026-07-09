@@ -181,8 +181,14 @@ public class LoginView extends JFrame {
             @Override
             public void onLoginSuccess(Users user) {
                 savePreferences();
-                dispose();
-                redirectBasedOnRole(user);
+                try {
+                    redirectBasedOnRole(user);
+                    dispose();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(LoginView.this,
+                            "界面加载失败: " + ex.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
+                }
             }
 
             @Override
@@ -201,8 +207,14 @@ public class LoginView extends JFrame {
 
             @Override public void onFirstLogin(Users user) {
                 savePreferences();
-                dispose();
-                redirectBasedOnRole(user);
+                try {
+                    redirectBasedOnRole(user);
+                    dispose();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(LoginView.this,
+                            "界面加载失败: " + ex.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
+                }
             }
             @Override public void onPasswordChangeSuccess(Users user) {}
             @Override public void onPasswordChangeFailed(String errorMessage) {}
@@ -220,8 +232,8 @@ public class LoginView extends JFrame {
     }
 
     private void openMedicalInterface(Users user) {
-        try {
-            SwingUtilities.invokeLater(() -> {
+        SwingUtilities.invokeLater(() -> {
+            try {
                 JFrame frame = new JFrame("医疗健康管理系统");
                 frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 frame.setSize(1200, 800);
@@ -229,37 +241,43 @@ public class LoginView extends JFrame {
                 com.healthsys.ui.medical.MainView panel = new com.healthsys.ui.medical.MainView(user);
                 frame.add(panel);
                 frame.setVisible(true);
-            });
-        } catch (Exception e) {
-            showError("医护界面加载失败", e.getMessage());
-        }
+            } catch (Exception e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(null,
+                        "医护界面加载失败: " + e.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
+            }
+        });
     }
 
     private void openAdminInterface() {
-        try {
-            SwingUtilities.invokeLater(() -> {
+        SwingUtilities.invokeLater(() -> {
+            try {
                 JFrame frame = new JFrame("管理员管理控制台");
                 frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 frame.setSize(1200, 800);
                 frame.setLocationRelativeTo(null);
-
                 AdminMainView panel = new AdminMainView();
                 frame.add(panel);
                 frame.setVisible(true);
-            });
-        } catch (Exception e) {
-            showError("管理员界面加载失败", e.getMessage());
-        }
+            } catch (Exception e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(null,
+                        "管理员界面加载失败: " + e.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
+            }
+        });
     }
 
     private void openUserInterface(Users user) {
-        try {
-            SwingUtilities.invokeLater(() -> {
+        SwingUtilities.invokeLater(() -> {
+            try {
                 new com.healthsys.ui.user.MainView(user);
-            });
-        } catch (Exception e) {
-            showError("用户界面加载失败", e.getMessage());
-        }
+            } catch (Exception e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(null,
+                        "界面加载失败: " + e.getMessage(),
+                        "错误", JOptionPane.ERROR_MESSAGE);
+            }
+        });
     }
 
     private void showError(String title, String message) {
