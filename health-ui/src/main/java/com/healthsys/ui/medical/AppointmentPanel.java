@@ -7,6 +7,7 @@ import com.toedter.calendar.JDateChooser;
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableColumn;
 import java.awt.*;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -102,14 +103,12 @@ public class AppointmentPanel extends CrudPanel<Appointment> {
     }
 
     private void setupButtonListeners() {
-        // 医生端不需要添加/编辑/删除预约，隐藏这些按钮
         getAddButton().setVisible(false);
         getEditButton().setVisible(false);
         getDeleteButton().setVisible(false);
 
         JPanel buttonPanel = (JPanel) getAddButton().getParent();
 
-        // 开始检查按钮 — 打开检查结果录入对话框
         JButton startExamBtn = CrudPanel.createStyledButton("开始检查", new Color(102, 204, 153));
         startExamBtn.addActionListener(e -> {
             Appointment selected = getSelectedAppointment();
@@ -132,7 +131,6 @@ public class AppointmentPanel extends CrudPanel<Appointment> {
         });
         buttonPanel.add(startExamBtn, 0);
 
-        // 查看结果按钮 — 显示已有检查结果
         JButton viewResultBtn = CrudPanel.createStyledButton("查看结果", new Color(255, 204, 153));
         viewResultBtn.addActionListener(e -> {
             Appointment selected = getSelectedAppointment();
@@ -182,27 +180,34 @@ public class AppointmentPanel extends CrudPanel<Appointment> {
         tableModel = new AppointmentTableModel();
         table = new JTable(tableModel);
 
-        table.setFont(new Font("微软雅黑", Font.PLAIN, 13));
+        Font tableFont = new Font("微软雅黑", Font.PLAIN, 14);
+        table.setFont(tableFont);
         table.getTableHeader().setFont(new Font("微软雅黑", Font.BOLD, 14));
-        table.setRowHeight(30);
+        table.setRowHeight(36);
         table.setSelectionBackground(new Color(220, 230, 250));
         table.setSelectionForeground(Color.BLACK);
         table.setGridColor(new Color(220, 220, 220));
         table.getTableHeader().setBackground(new Color(240, 240, 240));
+        table.setShowGrid(true);
+        table.setIntercellSpacing(new Dimension(0, 0));
 
         table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value,
                                                            boolean isSelected, boolean hasFocus, int row, int column) {
-                Component c = super.getTableCellRendererComponent(table, value,
+                super.getTableCellRendererComponent(table, value,
                         isSelected, hasFocus, row, column);
-                if (!isSelected) {
-                    c.setBackground(row % 2 == 0 ? Color.WHITE : new Color(248, 248, 248));
-                }
-                return c;
+                setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
+                return this;
             }
         });
 
+        // 列: 用户, 检查组, 检查日期, 时段, 状态, 支付
+        int[] widths = {80, 160, 100, 60, 70, 70};
+        for (int i = 0; i < widths.length; i++) {
+            TableColumn col = table.getColumnModel().getColumn(i);
+            col.setPreferredWidth(widths[i]);
+        }
         table.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
 
         JScrollPane scrollPane = new JScrollPane(table);
@@ -227,7 +232,7 @@ public class AppointmentPanel extends CrudPanel<Appointment> {
     }
 
     private class AppointmentTableModel extends AbstractTableModel {
-        private String[] columnNames = {"ID", "用户", "检查组", "负责医生", "预约时间", "检查时间", "状态", "支付状态", "创建时间"};
+        private String[] columnNames = {"用户", "检查组", "检查日期", "时段", "状态", "支付"};
         private List<Appointment> data;
 
         public void setData(List<Appointment> data) {
@@ -238,32 +243,22 @@ public class AppointmentPanel extends CrudPanel<Appointment> {
             return data.get(index);
         }
 
-        public int getColumnCount() {
-            return columnNames.length;
-        }
+        @Override public int getColumnCount() { return columnNames.length; }
+        @Override public int getRowCount() { return data == null ? 0 : data.size(); }
+        @Override public String getColumnName(int col) { return columnNames[col]; }
 
-        public int getRowCount() {
-            return data == null ? 0 : data.size();
-        }
-
-        public String getColumnName(int col) {
-            return columnNames[col];
-        }
-
+        @Override
         public Object getValueAt(int row, int col) {
-            Appointment appointment = data.get(row);
-            switch (col) {
-                case 0: return appointment.getId();
-                case 1: return appointment.getUserName();
-                case 2: return appointment.getGroupName();
-                case 3: return appointment.getDoctorName() != null ? appointment.getDoctorName() : "";
-                case 4: return appointment.getAppointmentTime();
-                case 5: return appointment.getExamDate();
-                case 6: return appointment.getStatusDisplay();
-                case 7: return appointment.getPaymentStatusDisplay();
-                case 8: return appointment.getCreatedAt();
-                default: return null;
-            }
+            Appointment a = data.get(row);
+            return switch (col) {
+                case 0 -> a.getUserName();
+                case 1 -> a.getGroupName();
+                case 2 -> a.getExamDate();
+                case 3 -> a.getExamTimeSlot() != null ? a.getExamTimeSlot() : "";
+                case 4 -> a.getStatusDisplay();
+                case 5 -> a.getPaymentStatusDisplay();
+                default -> null;
+            };
         }
     }
 }

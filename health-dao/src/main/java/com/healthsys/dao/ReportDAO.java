@@ -86,11 +86,13 @@ public class ReportDAO {
 
     public List<Report> getByDoctorIdWithJoin(Long doctorId) {
         List<Report> list = new ArrayList<>();
-        String sql = "SELECT r.*, d.name as doctor_name, u.real_name as user_name, a.exam_date " +
+        String sql = "SELECT r.*, d.name as doctor_name, u.real_name as user_name, " +
+                "a.exam_date, cg.group_name " +
                 "FROM reports r " +
                 "LEFT JOIN doctors d ON r.doctor_id = d.doctor_id " +
                 "LEFT JOIN appointments a ON r.appointment_id = a.appointment_id " +
                 "LEFT JOIN users u ON a.user_id = u.user_id " +
+                "LEFT JOIN check_groups cg ON a.group_id = cg.group_id " +
                 "WHERE r.doctor_id = ? " +
                 "ORDER BY r.upload_time DESC";
         try (Connection conn = DbUtil.getConnection();
@@ -99,8 +101,11 @@ public class ReportDAO {
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     Report r = mapRow(rs);
-                    try { r.setDoctorName(rs.getString("doctor_name")); } catch (SQLException ignored) {}
-                    try { r.setUserName(rs.getString("user_name")); } catch (SQLException ignored) {}
+                    r.setDoctorName(rs.getString("doctor_name"));
+                    r.setUserName(rs.getString("user_name"));
+                    r.setGroupName(rs.getString("group_name"));
+                    java.sql.Date examDate = rs.getDate("exam_date");
+                    if (examDate != null) r.setExamDate(examDate.toLocalDate());
                     list.add(r);
                 }
             }
