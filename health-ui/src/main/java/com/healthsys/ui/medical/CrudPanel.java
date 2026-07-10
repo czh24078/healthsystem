@@ -33,10 +33,10 @@ public abstract class CrudPanel<T> extends JPanel {
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
         buttonPanel.setBackground(Color.WHITE);
 
-        // 创建按钮 - 使用HealthTheme统一样式
-        addButton = createStyledButton("添加", HealthTheme.BTN_PRIMARY);
-        editButton = createStyledButton("编辑", HealthTheme.BTN_SECONDARY);
-        deleteButton = createStyledButton("删除", HealthTheme.BTN_DANGER);
+        // 创建按钮 - 使用与用户端预约页面统一的颜色
+        addButton = createStyledButton("添加", BTN_WARNING_YELLOW);
+        editButton = createStyledButton("编辑", BTN_SUCCESS_GREEN);
+        deleteButton = createStyledButton("删除", BTN_NEUTRAL_GRAY);
 
         buttonPanel.add(addButton);
         buttonPanel.add(editButton);
@@ -46,7 +46,7 @@ public abstract class CrudPanel<T> extends JPanel {
         searchPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 5));
         searchPanel.setBackground(Color.WHITE);
 
-        searchButton = createStyledButton("查询", HealthTheme.BTN_SUCCESS);
+        searchButton = createStyledButton("查询", BTN_INFO_BLUE);
         searchPanel.add(searchButton);
 
         toolbar.add(buttonPanel, BorderLayout.WEST);

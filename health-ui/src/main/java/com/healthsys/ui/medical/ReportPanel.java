@@ -44,7 +44,7 @@ public class ReportPanel extends JPanel {
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
         buttonPanel.setBackground(Color.WHITE);
 
-        JButton writeBtn = CrudPanel.createStyledButton("撰写报告", new Color(102, 204, 153));
+        JButton writeBtn = CrudPanel.createStyledButton("撰写报告", CrudPanel.BTN_WARNING_YELLOW);
         writeBtn.addActionListener(e -> {
             ReportEditDialog dialog = new ReportEditDialog(doctorId, null);
             if (dialog.showDialog() == ReportEditDialog.OK_OPTION) {
@@ -52,7 +52,7 @@ public class ReportPanel extends JPanel {
             }
         });
 
-        JButton editBtn = CrudPanel.createStyledButton("查看/编辑", new Color(153, 204, 255));
+        JButton editBtn = CrudPanel.createStyledButton("查看/编辑", CrudPanel.BTN_SUCCESS_GREEN);
         editBtn.addActionListener(e -> {
             Appointment selected = getSelectedAppointment();
             if (selected == null) {

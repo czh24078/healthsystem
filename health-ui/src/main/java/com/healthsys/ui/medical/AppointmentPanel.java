@@ -79,7 +79,7 @@ public class AppointmentPanel extends CrudPanel<Appointment> {
 
         JPanel buttonPanel = (JPanel) getAddButton().getParent();
 
-        JButton startExamBtn = CrudPanel.createStyledButton("开始检查", new Color(102, 204, 153));
+        JButton startExamBtn = CrudPanel.createStyledButton("开始检查", CrudPanel.BTN_WARNING_YELLOW);
         startExamBtn.addActionListener(e -> {
             Appointment selected = getSelectedAppointment();
             if (selected == null) {
@@ -101,7 +101,7 @@ public class AppointmentPanel extends CrudPanel<Appointment> {
         });
         buttonPanel.add(startExamBtn, 0);
 
-        JButton viewResultBtn = CrudPanel.createStyledButton("查看结果", new Color(255, 204, 153));
+        JButton viewResultBtn = CrudPanel.createStyledButton("查看结果", CrudPanel.BTN_SUCCESS_GREEN);
         viewResultBtn.addActionListener(e -> {
             Appointment selected = getSelectedAppointment();
             if (selected == null) {
