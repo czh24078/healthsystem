@@ -622,11 +622,13 @@ public class AppointmentView {
 
         if (choice == 0) {
             // 打印全部
-            printAllAppointments(appointmentTable);
+            printAllAppointments();
         } else if (choice == 1 && selectedRow >= 0) {
             // 打印选中
-            Long appointmentId = (Long) appointmentTable.getValueAt(selectedRow, 0);
-            printSingleAppointment(appointmentId);
+            Long appointmentId = getAppointmentIdFromRow(selectedRow);
+            if (appointmentId != null) {
+                printSingleAppointment(appointmentId);
+            }
         }
     }
 
@@ -642,7 +644,11 @@ public class AppointmentView {
             return;
         }
 
-        Long appointmentId = (Long) appointmentTable.getValueAt(selectedRow, 0);
+        Long appointmentId = getAppointmentIdFromRow(selectedRow);
+        if (appointmentId == null) {
+            JOptionPane.showMessageDialog(appointmentPanel, "未找到该预约", "错误", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
         Appointment appointment = controller.getAppointmentById(appointmentId);
         if (appointment == null) {
             JOptionPane.showMessageDialog(appointmentPanel, "未找到该预约", "错误", JOptionPane.ERROR_MESSAGE);
@@ -781,17 +787,14 @@ public class AppointmentView {
     /**
      * 打印全部预约
      */
-    private void printAllAppointments(JTable table) {
-        int rowCount = appointmentTable.getRowCount();
-        List<Appointment> appointments = new ArrayList<>();
+    private void printAllAppointments() {
+        List<Appointment> appointments = controller.getUserAppointmentsByStatus(
+                currentUser.getId(), currentFilter);
         List<CheckItemGroup> groups = new ArrayList<>();
         List<List<CheckItem>> allItems = new ArrayList<>();
 
-        for (int i = 0; i < rowCount; i++) {
-            Long appointmentId = (Long) appointmentTable.getValueAt(i, 0);
-            Appointment appointment = controller.getAppointmentById(appointmentId);
-            if (appointment == null) continue;
-            appointments.add(appointment);
+        for (Appointment appointment : appointments) {
+            Long appointmentId = appointment.getId();
             groups.add(controller.getCheckGroupByAppointmentId(appointmentId));
             allItems.add(controller.getCheckItemsByAppointmentId(appointmentId));
         }
