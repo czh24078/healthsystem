@@ -21,7 +21,7 @@ public class CheckGroupPanel extends CrudPanel<CheckItemGroup> {
     private static final Color SUCCESS_BG = new Color(232, 245, 233);
     private static final Color SUCCESS_FG = new Color(46, 125, 50);
     private static final Color DANGER_BG = new Color(255, 235, 238);
-    private static final Color DANGER_FG = new Color(198, 40, 40);
+    private static final Color DANGER_FG =new Color(255, 152, 0);
 
     public CheckGroupPanel() {
         checkItemGroupDAO = new CheckItemGroupDAO();

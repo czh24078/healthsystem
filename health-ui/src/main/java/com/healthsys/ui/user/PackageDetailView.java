@@ -77,7 +77,6 @@ public class PackageDetailView {
         infoPanel.add(priceValue);
 
         detailPanel.add(headerPanel, BorderLayout.NORTH);
-        detailPanel.add(infoPanel, BorderLayout.CENTER);
 
         // ===== 检查项目列表 =====
         String[] columnNames = { "序号", "检查项目名称", "描述", "价格" };
@@ -149,7 +148,13 @@ public class PackageDetailView {
         tablePanel.add(tableTitle, BorderLayout.NORTH);
         tablePanel.add(scrollPane, BorderLayout.CENTER);
 
-        detailPanel.add(tablePanel, BorderLayout.SOUTH);
+        // 将基本信息和检查项目列表放在中间区域，避免标题被遮挡
+        JPanel centerContent = new JPanel(new BorderLayout(0, 15));
+        centerContent.setBackground(Color.WHITE);
+        centerContent.add(infoPanel, BorderLayout.NORTH);
+        centerContent.add(tablePanel, BorderLayout.CENTER);
+        
+        detailPanel.add(centerContent, BorderLayout.CENTER);
     }
 
     private void loadTestsData(DefaultTableModel model) {

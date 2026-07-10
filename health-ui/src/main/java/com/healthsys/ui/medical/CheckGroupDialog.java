@@ -23,7 +23,7 @@ public class CheckGroupDialog extends JDialog {
 
     private static final Color PRIMARY   = new Color(70, 104, 197);
     private static final Color SUCCESS   = new Color(76, 175, 80);
-    private static final Color DANGER    = new Color(229, 115, 115);
+    private static final Color DANGER    = new Color(255, 152, 0);
     private static final Color BG_CARD   = new Color(248, 249, 252);
     private static final Color BORDER    = new Color(210, 215, 225);
     private static final Font  LABEL_FONT = new Font("微软雅黑", Font.PLAIN, 14);
@@ -57,7 +57,7 @@ public class CheckGroupDialog extends JDialog {
 
     private void initializeUI() {
         setLayout(new BorderLayout());
-        setSize(720, 640);
+        setSize(750, 660);
         setLocationRelativeTo(null);
         setModal(true);
         setTitle(checkItemGroup.getId() == null ? "新增检查组" : "编辑检查组 — " + checkItemGroup.getName());
@@ -81,7 +81,7 @@ public class CheckGroupDialog extends JDialog {
                 BorderFactory.createLineBorder(new Color(225, 228, 235)),
                 BorderFactory.createEmptyBorder(16, 20, 16, 20)));
         GridBagConstraints g = new GridBagConstraints();
-        g.insets = new Insets(5, 8, 5, 8);
+        g.insets = new Insets(6, 8, 6, 8);
         g.fill = GridBagConstraints.HORIZONTAL;
 
         int r = 0;
@@ -105,20 +105,47 @@ public class CheckGroupDialog extends JDialog {
         JPanel row = new JPanel(new GridBagLayout());
         row.setBackground(BG_CARD);
         GridBagConstraints rg = new GridBagConstraints();
-        rg.insets = new Insets(0, 0, 0, 12);
+        rg.insets = new Insets(0, 0, 0, 10);
         rg.fill = GridBagConstraints.HORIZONTAL;
+        rg.weightx = 0.5;
 
-        labelRaw(row, rg, 0, "价格 (¥)");
+        // 价格标签
+        rg.gridx = 0;
+        rg.weightx = 0;
+        JLabel priceLabel = new JLabel("价格 (¥)");
+        priceLabel.setFont(LABEL_FONT);
+        row.add(priceLabel, rg);
+
+        // 价格输入框 - 固定宽度
+        rg.gridx = 1;
+        rg.weightx = 0.4;
         priceField = field(checkItemGroup.getPrice() != null ? checkItemGroup.getPrice().toString() : "");
-        fieldRaw(row, rg, 1, priceField, 1.0);
+        priceField.setPreferredSize(new Dimension(100, 32));
+        row.add(priceField, rg);
 
-        rg.insets = new Insets(0, 24, 0, 0);
-        labelRaw(row, rg, 2, "每日限额");
-        dailyLimitField = field(checkItemGroup.getDailyLimit() != null ? checkItemGroup.getDailyLimit().toString() : "50");
+        // 每日限额标签
+        rg.gridx = 2;
+        rg.weightx = 0;
+        rg.insets = new Insets(0, 20, 0, 0);
+        JLabel limitLabel = new JLabel("每日限额");
+        limitLabel.setFont(LABEL_FONT);
+        row.add(limitLabel, rg);
+
+        // 每日限额输入框 - 固定宽度
+        rg.gridx = 3;
+        rg.weightx = 0.4;
         rg.insets = new Insets(0, 0, 0, 0);
-        fieldRaw(row, rg, 3, dailyLimitField, 1.0);
+        dailyLimitField = field(checkItemGroup.getDailyLimit() != null ? checkItemGroup.getDailyLimit().toString() : "50");
+        dailyLimitField.setPreferredSize(new Dimension(100, 32));
+        row.add(dailyLimitField, rg);
 
-        g.gridx = 0; g.gridy = r; g.gridwidth = 2; g.weightx = 1;
+        // 右侧填充占位
+        rg.gridx = 4;
+        rg.weightx = 1.0;
+        row.add(Box.createHorizontalGlue(), rg);
+
+        g.gridx = 0; g.gridy = r; g.gridwidth = 2; g.weightx = 1.0;
+        g.insets = new Insets(6, 8, 6, 8);
         card.add(row, g);
         g.gridwidth = 1;
         r++;
@@ -178,7 +205,7 @@ public class CheckGroupDialog extends JDialog {
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
         actions.setBackground(BG_CARD);
 
-        itemFilterField = new JTextField(10);
+        itemFilterField = new JTextField(12);
         itemFilterField.setFont(new Font("微软雅黑", Font.PLAIN, 13));
         itemFilterField.setBorder(insetBorder());
         itemFilterField.putClientProperty("JTextField.placeholderText", "搜索检查项…");
@@ -215,7 +242,7 @@ public class CheckGroupDialog extends JDialog {
         itemList = new JList<>(fullModel);
         itemList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         itemList.setVisibleRowCount(10);
-        itemList.setFixedCellHeight(32);
+        itemList.setFixedCellHeight(34);
         itemList.setBackground(Color.WHITE);
         itemList.setCellRenderer(new CheckItemRenderer());
 
@@ -420,6 +447,7 @@ public class CheckGroupDialog extends JDialog {
 
     private void label(JPanel p, GridBagConstraints g, int x, int y, String text) {
         g.gridx = x; g.gridy = y; g.weightx = 0;
+        g.insets = new Insets(6, 8, 6, 8);
         JLabel lbl = new JLabel(text);
         lbl.setFont(LABEL_FONT);
         lbl.setHorizontalAlignment(SwingConstants.RIGHT);
@@ -435,6 +463,7 @@ public class CheckGroupDialog extends JDialog {
 
     private void field(JPanel p, GridBagConstraints g, int x, int y, JComponent c, double wx) {
         g.gridx = x; g.gridy = y; g.weightx = wx;
+        g.insets = new Insets(6, 8, 6, 8);
         p.add(c, g);
     }
 
@@ -447,6 +476,7 @@ public class CheckGroupDialog extends JDialog {
         JTextField f = new JTextField(text != null ? text : "");
         f.setFont(FIELD_FONT);
         f.setBorder(insetBorder());
+        f.setPreferredSize(new Dimension(200, 34));
         return f;
     }
 

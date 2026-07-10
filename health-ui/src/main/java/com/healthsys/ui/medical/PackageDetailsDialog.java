@@ -5,6 +5,7 @@ import com.healthsys.common.entity.CheckItemGroup;
 import com.healthsys.ui.medical.CrudPanel;
 
 import javax.swing.*;
+import javax.swing.border.TitledBorder;
 import javax.swing.table.AbstractTableModel;
 import java.awt.*;
 import java.util.List;
@@ -35,15 +36,27 @@ public class PackageDetailsDialog extends JDialog {
 
         mainPanel.add(infoPanel, BorderLayout.NORTH);
 
-        // 检查项表格
+        // 检查项表格 - 使用 TitledBorder 直接加在 JPanel 上
+        JPanel tablePanel = new JPanel(new BorderLayout());
+        tablePanel.setBorder(BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(new Color(200, 200, 200)),
+                "包含的检查项",
+                TitledBorder.LEFT,
+                TitledBorder.TOP,
+                new Font("微软雅黑", Font.BOLD, 14)
+        ));
+        tablePanel.setBackground(Color.WHITE);
+
         JTable itemsTable = new JTable(new CheckItemTableModel(items));
         itemsTable.setFont(new Font("微软雅黑", Font.PLAIN, 13));
         itemsTable.getTableHeader().setFont(new Font("微软雅黑", Font.BOLD, 14));
         itemsTable.setRowHeight(30);
 
         JScrollPane scrollPane = new JScrollPane(itemsTable);
-        scrollPane.setBorder(BorderFactory.createTitledBorder("包含的检查项"));
-        mainPanel.add(scrollPane, BorderLayout.CENTER);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        tablePanel.add(scrollPane, BorderLayout.CENTER);
+
+        mainPanel.add(tablePanel, BorderLayout.CENTER);
 
         // 关闭按钮
         JButton closeButton = CrudPanel.createStyledButton("关闭", MAIN_COLOR);
