@@ -170,10 +170,10 @@ if ($dbExists -match $DB_NAME) {
 # 6. 构建项目
 # ============================================
 Write-Step "构建项目..."
-$buildResult = & $mvn clean compile -DskipTests -q 2>$null
+$buildResult = & $mvn clean install -DskipTests -q 2>$null
 if ($LASTEXITCODE -ne 0) {
     Write-Err "构建失败！以下为详细错误："
-    & $mvn clean compile -DskipTests
+    & $mvn clean install -DskipTests
     pause; exit 1
 }
 Write-OK "构建成功"
